@@ -22,5 +22,9 @@ func (h *HealthHandler) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *HealthHandler) CheckHealth(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	status, err := h.healthUsecase.CheckHealth(c)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, status)
 }

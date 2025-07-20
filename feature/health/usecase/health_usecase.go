@@ -4,15 +4,11 @@ import (
 	"context"
 
 	"github.com/MapMinder/mapminder_backend/feature/health/repository"
+	"github.com/MapMinder/mapminder_backend/shared/response"
 )
 
 type HealthUsecase interface {
-	CheckHealth(ctx context.Context) (*HealthStatus, error)
-}
-
-type HealthStatus struct {
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
+	CheckHealth(ctx context.Context) (*response.APIResponse, error)
 }
 
 type healthUsecase struct {
@@ -24,9 +20,9 @@ func NewHealthUsecase(healthRepo repository.HealthRepository) HealthUsecase {
 		healthRepo: healthRepo,
 	}
 }
-func (u *healthUsecase) CheckHealth(ctx context.Context) (*HealthStatus, error) {
+func (u *healthUsecase) CheckHealth(ctx context.Context) (*response.APIResponse, error) {
 
-	return &HealthStatus{
+	return &response.APIResponse{
 		Status: "ok",
 	}, nil
 }
