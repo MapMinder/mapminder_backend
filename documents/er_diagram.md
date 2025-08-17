@@ -9,7 +9,7 @@ erDiagram
 
 oauth_tokens {
     int oauth_id PK
-    int user_id FK 
+    varchar(40) user_id FK 
     varchar(50) oauth_provider
     varchar(255) oauth_provider_id
     text refresh_token
@@ -19,16 +19,16 @@ oauth_tokens {
 }
 
 user_setting {
-    int user_setting_id PK
-    int user_id FK
-    varchar(50) theme
-    varchar(10) language
+    varchar(40) user_setting_id PK
+    varchar(40) user_id FK
+    varchar(10) theme
+    varchar(3) language
     datetime created_at
     datetime updated_at
 }
 
 users {
-    int user_id PK
+    varchar(40) user_id PK
     varchar(60) username
     varchar(255) email
     datetime created_at
@@ -43,7 +43,7 @@ tags {
 
 locations {
     int location_id PK
-    int note_id FK
+    int reminder_id FK
     float latitude
     float longitude
     varchar(60) place_name
@@ -51,8 +51,8 @@ locations {
 
 reminders {
     int reminder_id PK
-    int user_id FK
-    int note_id FK
+    varchar(40) user_id FK
+    int note_id
     int location_id
     bool reminder_flag
     datetime date_time
@@ -69,7 +69,7 @@ notes {
 
 notifications {
     int notification_id PK
-    int user_id FK
+    varchar(40) user_id FK
     int reminder_id FK
     datetime sent_at
     varchar(10) status
@@ -88,5 +88,5 @@ reminders ||--o{ notes : has
 notes ||--o{ tags : has
 reminders ||--|| locations : has
 reminders ||--|| notifications : has
-reminders ||--|| reminder_recurrences : might_have
+reminders ||--o| reminder_recurrences : might_have
 ```
