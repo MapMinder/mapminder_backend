@@ -16,7 +16,6 @@ func TestHealthUsecase_CheckHealth(t *testing.T) {
 	usecase := NewHealthUsecase(mockRepo)
 
 	result, err := usecase.CheckHealth(context.Background())
-
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -29,3 +28,4 @@ func TestHealthUsecase_CheckHealth(t *testing.T) {
 		t.Errorf("Expected status 'ok', got %s", result.Status)
 	}
 }
+
