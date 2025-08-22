@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -33,7 +34,7 @@ func LoadEnv() {
 	}
 
 	if err := godotenv.Load(); err != nil {
-		panic("failed to load .env file: %w")
+		log.Fatal("failed to load .env file")
 	}
 	envLoaded = true
 }
@@ -45,7 +46,7 @@ func Load() *Config {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		panic("PORT environment variable is not set")
+		log.Fatal("PORT environment variable is not set")
 	}
 
 	config := &Config{
@@ -60,34 +61,34 @@ func LoadDbConfig() *DBConfig {
 	// setup
 	LoadEnv()
 
-	// gets db user if provided else panics
+	// gets db user if provided kills process with log.fatal
 	dbUser := os.Getenv("DB_USER")
 	if dbUser == "" {
-		panic("DB_USER environment variable is not set")
+		log.Fatal("DB_USER environment variable is not set")
 	}
 
-	// gets db password if provided else panics
+	// gets db password if provided kills process with log.fatal
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
-		panic("DB_PASSWORD environment variable is not set")
+		log.Fatal("DB_PASSWORD environment variable is not set")
 	}
 
-	// gets db host if provided else panics
+	// gets db host if provided kills process with log.fatal
 	dbHost := os.Getenv("DB_HOST")
 	if dbHost == "" {
-		panic("DB_HOST environment variable is not set")
+		log.Fatal("DB_HOST environment variable is not set")
 	}
 
-	// gets db port if provided else panics
+	// gets db port if provided kills process with log.fatal
 	dbPort := os.Getenv("DB_PORT")
 	if dbPort == "" {
-		panic("DB_PORT environment variable is not set")
+		log.Fatal("DB_PORT environment variable is not set")
 	}
 
-	// gets db name if provided else panics
+	// gets db name if provided kills process with log.fatal
 	dbName := os.Getenv("DB_NAME")
 	if dbName == "" {
-		panic("DB_NAME environment variable is not set")
+		log.Fatal("DB_NAME environment variable is not set")
 	}
 
 	dbConfig := &DBConfig{
