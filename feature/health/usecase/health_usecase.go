@@ -20,8 +20,8 @@ func NewHealthUsecase(healthRepo repository.HealthRepository) HealthUsecase {
 		healthRepo: healthRepo,
 	}
 }
-func (u *healthUsecase) CheckHealth(ctx context.Context) (*response.APIResponse, error) {
 
+func (u *healthUsecase) CheckHealth(ctx context.Context) (*response.APIResponse, error) {
 	return &response.APIResponse{
 		Status: "ok",
 	}, nil

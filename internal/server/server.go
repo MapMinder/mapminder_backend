@@ -7,6 +7,7 @@ import (
 	"github.com/MapMinder/mapminder_backend/internal/config"
 	router "github.com/MapMinder/mapminder_backend/internal/httpServer"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -14,11 +15,11 @@ type Server struct {
 	config *config.Config
 }
 
-func NewServer(cfg *config.Config) *Server {
+func NewServer(cfg *config.Config, dbHandler *gorm.DB) *Server {
 	engine := gin.Default()
 
 	// ルートを設定
-	router.NewRoutes(engine)
+	router.NewRoutes(engine, dbHandler)
 
 	return &Server{
 		engine: engine,
