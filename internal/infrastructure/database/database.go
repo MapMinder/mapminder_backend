@@ -2,9 +2,9 @@ package infrastructure
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/MapMinder/mapminder_backend/internal/config"
+	"github.com/MapMinder/mapminder_backend/internal/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -18,10 +18,13 @@ func NewDBHandler(cfg *config.DBConfig) *gorm.DB {
 		cfg.DBPort,
 		cfg.DBName,
 	)
+	logger.Info("connecting to the database...")
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to initilize DB: ", err)
+		logger.Fatalf("Failed to initilize DB: %v", err)
 	}
+
+	logger.Info("connected to the database")
 
 	return db
 }

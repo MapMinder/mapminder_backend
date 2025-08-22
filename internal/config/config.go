@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap/zapcore"
 )
 
 var envLoaded = false
@@ -17,11 +18,18 @@ type DBConfig struct {
 	DBName     string
 }
 
-type Config struct {
-	Port string
+type ZapConfig struct {
+	LogLevel      zapcore.Level
+	IsDevelopment bool
+	Encoding      string
 }
 
-// load environment variables
+type Config struct {
+	Port        string
+	Environment string
+}
+
+// LoadEnv load environment variables
 func LoadEnv() {
 	if envLoaded {
 		return
@@ -39,7 +47,7 @@ func LoadEnv() {
 	envLoaded = true
 }
 
-// 設定ファイルの読み込み
+// Load 設定ファイルの読み込み
 func Load() *Config {
 	// setup
 	LoadEnv()
@@ -49,14 +57,21 @@ func Load() *Config {
 		log.Fatal("PORT environment variable is not set")
 	}
 
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" {
+		// set environment to development by default
+		environment = "development"
+	}
+
 	config := &Config{
-		Port: port,
+		Port:        port,
+		Environment: environment,
 	}
 
 	return config
 }
 
-// setup db config
+// LoadDbConfig setup db config
 func LoadDbConfig() *DBConfig {
 	// setup
 	LoadEnv()
@@ -100,4 +115,31 @@ func LoadDbConfig() *DBConfig {
 	}
 
 	return dbConfig
+}
+
+// LoadZapConfig setup logger config
+func LoadZapConfig() *ZapConfig {
+	// setup
+	LoadEnv()
+	var config ZapConfig
+
+	logLevel := os.Getenv("LOG_LEVEL")
+	switch logLevel {
+	case "DEBUG":
+		config.LogLevel = zapcore.DebugLevel
+		config.IsDevelopment = true
+	case "INFO":
+		config.LogLevel = zapcore.InfoLevel
+		config.IsDevelopment = false
+	default:
+		/*
+			NOTE: Log levelを環境変数に設定されていない場合にはDEBUG LEVEL にするのを危険かと思うため
+			デフォルトはINFO levelに設定
+		*/
+		config.LogLevel = zapcore.InfoLevel
+		config.IsDevelopment = false
+	}
+
+	config.Encoding = "json"
+	return &config
 }

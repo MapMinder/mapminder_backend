@@ -2,6 +2,8 @@ package config
 
 import (
 	"testing"
+
+	"go.uber.org/zap/zapcore"
 )
 
 func TestLoad(t *testing.T) {
@@ -44,5 +46,42 @@ func TestLoadDBConfig(t *testing.T) {
 
 	if dbCfg.DBName != "mapminder" {
 		t.Errorf("expected DBName mapminder but got %s", dbCfg.DBName)
+	}
+}
+
+// TestLoadZapConfig
+func TestLoadZapConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		logLevel    string
+		zapLogLevel zapcore.Level
+	}{
+		{
+			name:        "WHEN LEVEL IS INFO",
+			logLevel:    "INFO",
+			zapLogLevel: zapcore.InfoLevel,
+		},
+		{
+			name:        "WHEN LEVEL IS DEBUG",
+			logLevel:    "DEBUG",
+			zapLogLevel: zapcore.DebugLevel,
+		},
+		{
+			name:        "WHEH LEVEL IS NOT GIVEN",
+			logLevel:    "",
+			zapLogLevel: zapcore.InfoLevel,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// setup
+			t.Setenv("GO_ENV", "test")
+			t.Setenv("LOG_LEVEL", tt.logLevel)
+			zapCfg := LoadZapConfig()
+
+			if zapCfg.LogLevel != tt.zapLogLevel {
+				t.Errorf("expected log level to be %s but got %s", tt.zapLogLevel, zapCfg.LogLevel)
+			}
+		})
 	}
 }
