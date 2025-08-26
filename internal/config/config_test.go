@@ -9,6 +9,7 @@ import (
 func TestLoad(t *testing.T) {
 	// setup
 	t.Setenv("GO_ENV", "test")
+	t.Setenv("ENVIRONMENT", "development")
 	t.Setenv("PORT", "8080")
 
 	cfg := Load()

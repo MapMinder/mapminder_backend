@@ -59,8 +59,7 @@ func Load() *Config {
 
 	environment := os.Getenv("ENVIRONMENT")
 	if environment == "" {
-		// set environment to development by default
-		environment = "development"
+		log.Fatal("ENVIRONMENT environment variable is not set")
 	}
 
 	config := &Config{

@@ -40,7 +40,7 @@ func Init(zapConfig *config.ZapConfig) {
 	var err error
 	log, err = config.Build()
 	if err != nil {
-		panic(err)
+		log.Sugar().Fatalf("Failed to build logger: %s", err)
 	}
 
 	log.Info("Logger initialized")
