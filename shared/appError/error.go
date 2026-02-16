@@ -40,3 +40,7 @@ func NotFound(args ...any) *Error {
 func Internal(args ...any) *Error {
 	return newError(status.InternalError, args...)
 }
+
+func GoogleError(args ...any) *Error {
+	return newError(status.GoogleError, args...)
+}
