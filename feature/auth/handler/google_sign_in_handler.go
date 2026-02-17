@@ -32,6 +32,7 @@ func (h *GoogleSignInHandler) GoogleSignIn(r *gin.Context) {
 	logger.Info("GoogleSignIn")
 	ctx := r.Request.Context()
 
+	// bind request
 	var req dto.GoogleSignInToken
 	if err := r.ShouldBind(&req); err != nil {
 		logger.Errorw("Failed To Bind Request", err)
@@ -39,18 +40,19 @@ func (h *GoogleSignInHandler) GoogleSignIn(r *gin.Context) {
 		return
 	}
 
+	// validate request
 	if err := validator.ValidateStruct(req); err != nil {
 		logger.Errorw("Failed To Validate Request", err)
 		r.Error(apperror.BadRequest())
 		return
 	}
 
-	jwtToken, err := h.GoogleSignInUsecase.GoogleSignIn(ctx, req)
+	googleSignInClaims, err := h.GoogleSignInUsecase.GoogleSignIn(ctx, req.IdToken)
 	if err != nil {
 		logger.Error(err)
 		r.Error(err)
 		return
 	}
 
-	r.JSON(status.Success.Code, jwtToken)
+	r.JSON(status.Success.Code, googleSignInClaims)
 }

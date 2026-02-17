@@ -1,9 +1,15 @@
 package repository
 
+import "gorm.io/gorm"
+
 type GoogleSignInRepository interface{}
 
-type googleSignInRepository struct{}
+type googleSignInRepository struct {
+	db *gorm.DB
+}
 
-func NewGoogleSignInRepository() GoogleSignInRepository {
-	return &googleSignInRepository{}
+func NewGoogleSignInRepository(db *gorm.DB) GoogleSignInRepository {
+	return &googleSignInRepository{
+		db: db,
+	}
 }
