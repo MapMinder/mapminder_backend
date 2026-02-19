@@ -1,14 +1,17 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/MapMinder/mapminder_backend/feature/user/domain"
+	tx "github.com/MapMinder/mapminder_backend/internal/infrastructure/database"
 	"github.com/MapMinder/mapminder_backend/internal/logger"
 	apperror "github.com/MapMinder/mapminder_backend/shared/appError"
 	"gorm.io/gorm"
 )
 
 type UserRepository interface {
-	Create(user domain.User, tx *gorm.DB) (err error)
+	Create(ctx context.Context, user domain.User) (err error)
 	GetUser(userId string) (user domain.User, err error)
 }
 
@@ -22,12 +25,10 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	}
 }
 
-func (r *userRepository) Create(user domain.User, tx *gorm.DB) (err error) {
-	if tx != nil {
-		r.db = tx
-	}
+func (r *userRepository) Create(ctx context.Context, user domain.User) (err error) {
+	db := tx.ExtractTx(ctx, r.db)
 
-	if err = r.db.Create(&user).Error; err != nil {
+	if err = db.Create(&user).Error; err != nil {
 		logger.Errorw("Error creating user: ", err)
 		err = apperror.Internal()
 		return

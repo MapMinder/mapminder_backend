@@ -4,14 +4,25 @@ import (
 	"github.com/MapMinder/mapminder_backend/feature/auth/handler"
 	"github.com/MapMinder/mapminder_backend/feature/auth/repository"
 	"github.com/MapMinder/mapminder_backend/feature/auth/usecase"
+	usrRepository "github.com/MapMinder/mapminder_backend/feature/user/repository"
+	infrastructure "github.com/MapMinder/mapminder_backend/internal/infrastructure/database"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func NewAuthHandler(router *gin.RouterGroup, db *gorm.DB) {
-	googleRepository := repository.NewGoogleSignInRepository(db)
+	// repositories
+	oauthRepository := repository.NewOauthTokenRepository(db)
 	googleApiRepository := repository.NewGoogleSignInApiRepository()
-	googleUsecase := usecase.NewHealthUsecase(googleRepository, googleApiRepository)
+	userRespository := usrRepository.NewUserRepository(db)
+
+	// transaction manager
+	transactionManager := infrastructure.NewTransactionManager(db)
+
+	// usecse
+	googleUsecase := usecase.NewGoogleSignInUsecase(oauthRepository, googleApiRepository, userRespository, transactionManager)
+
+	// handler
 	googleHandler := handler.NewGoogleSignInhandler(googleUsecase)
 
 	// initialize routes

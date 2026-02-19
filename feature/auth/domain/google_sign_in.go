@@ -1,5 +1,9 @@
 package domain
 
+const (
+	GoogleProvider = "google"
+)
+
 // GoogleSignIn
 type GoogleSignInCreds struct {
 	IdToken  string
