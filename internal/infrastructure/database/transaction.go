@@ -28,7 +28,10 @@ func (m *TransactionManager) WithinTransaction(ctx context.Context, fn func(ctx 
 	})
 }
 
-func ExtractTx(ctx context.Context) (*gorm.DB, bool) {
+func ExtractTx(ctx context.Context, db *gorm.DB) *gorm.DB {
 	tx, ok := ctx.Value(txKey).(*gorm.DB)
-	return tx, ok
+	if ok {
+		return tx
+	}
+	return tx
 }

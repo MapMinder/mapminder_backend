@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MapMinder/mapminder_backend/internal/config"
@@ -118,8 +119,8 @@ func ErrorStatus(s *status.Status, fields ...zap.Field) {
 	log.Error(s.Message, customizedFields...)
 }
 
-func Errorw(err error, fields ...interface{}) {
-	log.Sugar().Errorw(err.Error(), fields...)
+func Errorw(msg string, err error, fields ...interface{}) {
+	log.Sugar().Errorw(fmt.Sprintf(msg+" %s", err.Error()), fields...)
 }
 
 func Fatal(msg string, fields ...zap.Field) {
@@ -132,4 +133,8 @@ func Fatalf(templateString string, fields ...interface{}) {
 
 func Panic(msg string, fields ...zap.Field) {
 	log.Panic(msg, fields...)
+}
+
+func InitForTest() {
+	log = zap.NewNop()
 }
