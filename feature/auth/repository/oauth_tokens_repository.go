@@ -12,7 +12,7 @@ import (
 )
 
 type OauthTokenRepository interface {
-	GetOauthInformation(sub string) (oauthToken domain.OauthToken, err error)
+	GetOauthInformation(ctx context.Context, sub string) (oauthToken domain.OauthToken, err error)
 	CreateOauthToken(ctx context.Context, oauthToken domain.OauthToken) (err error)
 }
 
@@ -27,10 +27,10 @@ func NewOauthTokenRepository(db *gorm.DB) OauthTokenRepository {
 }
 
 // GetOauthInformation()
-func (r *oauthTokenRepository) GetOauthInformation(sub string) (oauthToken domain.OauthToken, err error) {
+func (r *oauthTokenRepository) GetOauthInformation(ctx context.Context, sub string) (oauthToken domain.OauthToken, err error) {
 	logger.Infof("oauthToken repository")
 
-	if err = r.db.Take(&oauthToken).Where("oauth_provider = ?", sub).Error; err != nil {
+	if err = r.db.Where("oauth_provider_id = ?", sub).Take(&oauthToken).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.Infof("No records found for given sub")
 			err = nil
@@ -47,6 +47,9 @@ func (r *oauthTokenRepository) GetOauthInformation(sub string) (oauthToken domai
 // CreateOauthToken
 func (r *oauthTokenRepository) CreateOauthToken(ctx context.Context, oauthToken domain.OauthToken) (err error) {
 	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
 	if err = db.Create(&oauthToken).Error; err != nil {
 		logger.Errorw("Error creating oauth: ", err)
 		err = apperror.Internal()

@@ -27,6 +27,9 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (r *userRepository) Create(ctx context.Context, user domain.User) (err error) {
 	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
 
 	if err = db.Create(&user).Error; err != nil {
 		logger.Errorw("Error creating user: ", err)
@@ -38,8 +41,9 @@ func (r *userRepository) Create(ctx context.Context, user domain.User) (err erro
 }
 
 func (r *userRepository) GetUser(userId string) (user domain.User, err error) {
-	if err = r.db.Take(&user).Where("user_id = ?", userId).Error; err != nil {
+	if err = r.db.Where("user_id = ?", userId).Take(&user).Error; err != nil {
 		logger.Errorw("Error finding user: ", err)
+		err = apperror.Internal()
 		return
 	}
 	return

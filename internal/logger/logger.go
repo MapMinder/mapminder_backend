@@ -134,3 +134,7 @@ func Fatalf(templateString string, fields ...interface{}) {
 func Panic(msg string, fields ...zap.Field) {
 	log.Panic(msg, fields...)
 }
+
+func InitForTest() {
+	log = zap.NewNop()
+}

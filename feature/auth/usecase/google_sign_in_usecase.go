@@ -12,8 +12,8 @@ import (
 	"github.com/MapMinder/mapminder_backend/internal/logger"
 	apperror "github.com/MapMinder/mapminder_backend/shared/appError"
 	"github.com/MapMinder/mapminder_backend/shared/tx"
+	uuidgenerator "github.com/MapMinder/mapminder_backend/shared/uuid_manager"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 type GoogleSignInUsecase interface {
@@ -25,14 +25,22 @@ type googleSignInUsecase struct {
 	OauthTokenRepository repository.OauthTokenRepository
 	ApiRepository        repository.GoogleSignInApiRepository
 	UserRepository       usrRepository.UserRepository
+	UUIDGenerator        uuidgenerator.UUIDManager
 }
 
-func NewGoogleSignInUsecase(oauthTokenRepository repository.OauthTokenRepository, apiRepository repository.GoogleSignInApiRepository, userRepository usrRepository.UserRepository, txManager tx.Manager) GoogleSignInUsecase {
+func NewGoogleSignInUsecase(
+	oauthTokenRepository repository.OauthTokenRepository,
+	apiRepository repository.GoogleSignInApiRepository,
+	userRepository usrRepository.UserRepository,
+	uuidGenerator uuidgenerator.UUIDManager,
+	txManager tx.Manager,
+) GoogleSignInUsecase {
 	return &googleSignInUsecase{
 		TxManager:            txManager,
 		OauthTokenRepository: oauthTokenRepository,
 		ApiRepository:        apiRepository,
 		UserRepository:       userRepository,
+		UUIDGenerator:        uuidGenerator,
 	}
 }
 
@@ -48,13 +56,13 @@ func (u *googleSignInUsecase) GoogleSignIn(ctx context.Context, idToken string) 
 			IdToken:  idToken,
 		}
 
-		googleSignInClaims, err := u.ApiRepository.GetGoogleUserInfo(ctx, creds)
+		googleSignInClaims, err := u.ApiRepository.GetGoogleUserInfo(txCtx, creds)
 		if err != nil {
 			return err
 		}
 
 		// check user exists with subject
-		oauthToken, err := u.OauthTokenRepository.GetOauthInformation(googleSignInClaims.Claims.Subject)
+		oauthToken, err := u.OauthTokenRepository.GetOauthInformation(txCtx, googleSignInClaims.Claims.Subject)
 		if err != nil {
 			return err
 		}
@@ -78,7 +86,7 @@ func (u *googleSignInUsecase) GoogleSignIn(ctx context.Context, idToken string) 
 			return err
 		}
 
-		return nil
+		return err
 	})
 	return
 }
@@ -87,7 +95,7 @@ func (u *googleSignInUsecase) GoogleSignIn(ctx context.Context, idToken string) 
 func (u *googleSignInUsecase) createUserRelatedData(ctx context.Context, googleSignInClaims domain.GoogleIdToken) (user usrDomain.User, err error) {
 	logger.Info("Creating New User")
 
-	newUserUUID, err := uuid.NewV7()
+	newUserUUID, err := u.UUIDGenerator.NewV7()
 	if err != nil {
 		logger.Errorw("Error occurred while creating user uuid: ", err)
 		err = apperror.Internal()
@@ -95,7 +103,7 @@ func (u *googleSignInUsecase) createUserRelatedData(ctx context.Context, googleS
 	}
 
 	user = usrDomain.User{
-		UserId:   newUserUUID.String(),
+		UserId:   newUserUUID,
 		Email:    googleSignInClaims.Claims.Email,
 		Username: googleSignInClaims.Claims.Name,
 	}
@@ -107,7 +115,7 @@ func (u *googleSignInUsecase) createUserRelatedData(ctx context.Context, googleS
 
 	// create record for oauth_token table
 	oauthToken := domain.OauthToken{
-		UserId:          newUserUUID.String(),
+		UserId:          newUserUUID,
 		OauthProvider:   domain.GoogleProvider,
 		OauthProviderId: googleSignInClaims.Subject,
 	}
