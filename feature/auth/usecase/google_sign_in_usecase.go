@@ -149,6 +149,8 @@ func (u *googleSignInUsecase) createJWTToken(userId string) (signedJWTToken stri
 	signedJWTToken, err = token.SignedString([]byte(signKey))
 	if err != nil {
 		logger.Errorw("Failed to sign JWT token: ", err)
+		err = apperror.Internal()
+		return
 	}
 	return
 }
