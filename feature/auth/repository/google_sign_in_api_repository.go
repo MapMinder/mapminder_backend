@@ -24,7 +24,7 @@ func NewGoogleSignInApiRepository() GoogleSignInApiRepository {
 func (r *googleSignInApiRepository) GetGoogleUserInfo(ctx context.Context, googleSignInCreds domain.GoogleSignInCreds) (googleIdToken domain.GoogleIdToken, err error) {
 	payload, err := idtoken.Validate(ctx, googleSignInCreds.IdToken, googleSignInCreds.ClientId)
 	if err != nil {
-		logger.Error(err)
+		logger.Errorw("Marshal error occurred", err)
 		err = apperror.GoogleError()
 		return
 	}
@@ -33,12 +33,14 @@ func (r *googleSignInApiRepository) GetGoogleUserInfo(ctx context.Context, googl
 	marshalPayload, err := json.Marshal(payload.Claims)
 	if err != nil {
 		logger.Errorw("Marshal error occurred", apperror.Internal())
+		err = apperror.Internal()
 		return
 	}
 
 	var claims domain.GoogleIdTokenClaims
 	if err = json.Unmarshal(marshalPayload, &claims); err != nil {
 		logger.Errorw("Unmarshal error occurred", apperror.Internal())
+		err = apperror.Internal()
 		return
 	}
 
