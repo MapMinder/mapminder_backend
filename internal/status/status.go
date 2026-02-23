@@ -18,4 +18,5 @@ var (
 	NotFound      = Status{Code: http.StatusNotFound, Message: "Resource not found"}
 	InternalError = Status{Code: http.StatusInternalServerError, Message: "Internal server error"}
 	GoogleError   = Status{Code: http.StatusBadRequest, Message: "Falied to get required information"}
+	JWTError      = Status{Code: http.StatusBadRequest, Message: "JWT token is malformed or invalid"}
 )

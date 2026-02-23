@@ -44,3 +44,7 @@ func Internal(args ...any) *Error {
 func GoogleError(args ...any) *Error {
 	return newError(status.GoogleError, args...)
 }
+
+func JWTError(args ...any) *Error {
+	return newError(status.JWTError, args...)
+}
