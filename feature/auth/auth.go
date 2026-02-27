@@ -17,7 +17,7 @@ func NewAuthHandler(router *gin.RouterGroup, db *gorm.DB) {
 	googleApiRepository := repository.NewGoogleSignInApiRepository()
 	userRespository := usrRepository.NewUserRepository(db)
 
-	// transaction manager
+	// manager
 	transactionManager := infrastructure.NewTransactionManager(db)
 	uuidManager := uuidgenerator.NewUUIDGenerator()
 

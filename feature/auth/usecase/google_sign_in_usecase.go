@@ -21,11 +21,12 @@ type GoogleSignInUsecase interface {
 }
 
 type googleSignInUsecase struct {
-	TxManager            tx.Manager
+	TxManager     tx.Manager
+	UUIDGenerator uuidgenerator.UUIDManager
+
 	OauthTokenRepository repository.OauthTokenRepository
 	ApiRepository        repository.GoogleSignInApiRepository
 	UserRepository       usrRepository.UserRepository
-	UUIDGenerator        uuidgenerator.UUIDManager
 }
 
 func NewGoogleSignInUsecase(
