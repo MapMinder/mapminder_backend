@@ -89,6 +89,10 @@ func (u *googleSignInUsecase) GoogleSignIn(ctx context.Context, idToken string) 
 
 		return err
 	})
+	if err != nil {
+		logger.Errorw("Some Error Occurred: ", err)
+		return
+	}
 	return
 }
 

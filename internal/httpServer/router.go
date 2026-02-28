@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/MapMinder/mapminder_backend/feature/auth"
 	"github.com/MapMinder/mapminder_backend/feature/health"
+	"github.com/MapMinder/mapminder_backend/feature/reminder"
 	"github.com/MapMinder/mapminder_backend/internal/middleware"
 	"gorm.io/gorm"
 
@@ -21,4 +22,9 @@ func NewRoutes(r *gin.Engine, dbHandler *gorm.DB) {
 	// auth
 	authGroup := r.Group("/auth")
 	auth.NewAuthHandler(authGroup, dbHandler)
+
+	// reminder
+	reminderGroup := r.Group("/reminder")
+	reminderGroup.Use(middleware.JWTAuthHandler())
+	reminder.NewReminderHandler(reminderGroup, dbHandler)
 }

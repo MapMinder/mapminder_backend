@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/MapMinder/mapminder_backend/internal/logger"
 	apperror "github.com/MapMinder/mapminder_backend/shared/appError"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -58,6 +59,7 @@ func JWTAuthHandler() gin.HandlerFunc {
 		userId := claims.Subject
 		c.Set(string(userIDKey), userId)
 		ctx := context.WithValue(c.Request.Context(), userIDKey, userId)
+		logger.Infof("sss", "ctx", ctx)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
@@ -67,5 +69,6 @@ func JWTAuthHandler() gin.HandlerFunc {
 // UserIDFromContext
 func UserIDFromContext(ctx context.Context) string {
 	userId, _ := ctx.Value(userIDKey).(string)
+	logger.Info(userId)
 	return userId
 }

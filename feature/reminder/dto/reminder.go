@@ -8,9 +8,9 @@ import (
 type Reminder struct {
 	Title       string  `json:"title" validate:"required;min=1"`
 	Description string  `json:"description" validate:"required;min=1"`
-	Latitude    float32 `json:"latitude" validate:"required"`
-	Longitude   float32 `json:"longitude" validate:"required"`
-	Radius      float32 `json:"radius" validate:"required"`
+	Latitude    float64 `json:"latitude" validate:"required,latitude"`
+	Longitude   float64 `json:"longitude" validate:"required,longitude"`
+	// Radius      float64 `json:"radius" validate:"required"` the use's will not be able to set the radius it is a default value (atleast for the mvp)
 }
 
 type ReminderRes struct {

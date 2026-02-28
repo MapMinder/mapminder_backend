@@ -35,11 +35,11 @@ func NewReminderUsecase(txManager tx.Manager, uuidGenerator uuidgenerator.UUIDMa
 
 // Create Reminder
 func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminder) (reminder domain.Reminder, err error) {
-	logger.Info("Create Reminder")
+	logger.Info("Create Reminder Usecase")
 
 	err = u.TxManager.WithinTransaction(ctx, func(txCtx context.Context) error {
 		// get user data from the auth
-		userId := middleware.UserIDFromContext(ctx)
+		userId := middleware.UserIDFromContext(txCtx)
 		now := time.Now()
 
 		reminderId, err := u.UUIDgenerator.NewV7()
@@ -49,7 +49,6 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 			return err
 		}
 
-		// TODO: validity check of the radius, latitude and longitude needs to be done
 		reminder = domain.Reminder{
 			ReminderId:      reminderId,
 			UserId:          userId,
@@ -57,7 +56,7 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 			Description:     params.Description,
 			Latitude:        params.Latitude,
 			Longitude:       params.Longitude,
-			Radius:          params.Radius,
+			Radius:          domain.DefaultRadius,
 			Status:          string(domain.CreatedStatus),
 			LastTriggeredAt: now,
 		}
@@ -70,6 +69,10 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 		}
 		return nil
 	})
+	if err != nil {
+		logger.Errorw("Some Error Occurred", err)
+		return
+	}
 
 	return
 }

@@ -15,7 +15,6 @@ func NewReminderHandler(router *gin.RouterGroup, db *gorm.DB) {
 	reminderRepository := repository.NewReminderRepository(db)
 
 	// manager
-	// NOTE: i need to know if this is valid this looks like i am initializing this per feature need to cross check
 	transactionManager := infrastructure.NewTransactionManager(db)
 	uuidManager := uuidgenerator.NewUUIDGenerator()
 
