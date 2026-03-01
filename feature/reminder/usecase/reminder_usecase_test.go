@@ -141,3 +141,94 @@ func TestCreateReminder(t *testing.T) {
 		})
 	}
 }
+
+func TestGetReminder(t *testing.T) {
+	logger.InitForTest()
+	ctx := context.Background()
+	testUserId := "test-user-id"
+	testReminderId := "test-reminder-uuid"
+	testTitle := "test title"
+	testDescription := "test description"
+	testLatitude := 20.00
+	testLongitude := 20.00
+
+	expectedReminder := domain.Reminder{
+		ReminderId:  testReminderId,
+		UserId:      testUserId,
+		Title:       testTitle,
+		Description: testDescription,
+		Latitude:    testLatitude,
+		Longitude:   testLongitude,
+		Radius:      domain.DefaultRadius,
+		Status:      string(domain.CreatedStatus),
+	}
+
+	tests := []struct {
+		name        string
+		reminderId  string
+		prepareFunc func(
+			mrr *mock.MockReminderRepository,
+			mUUID *mockUUID.MockUUIDManager,
+			mTx *txMock.MockManager,
+			mTime *mockTime.MockRealTimeProvider,
+		)
+		wantedError error
+		wantedRes   domain.Reminder
+	}{
+		{
+			name:       "success",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(expectedReminder, nil)
+			},
+			wantedError: nil,
+			wantedRes:   expectedReminder,
+		},
+		{
+			name:       "fails when repository returns error",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(domain.Reminder{}, apperror.Internal())
+			},
+			wantedError: apperror.Internal(),
+			wantedRes:   domain.Reminder{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockReminderRepo := mock.NewMockReminderRepository(ctrl)
+			mockTx := txMock.NewMockManager(ctrl)
+			mockUUID := mockUUID.NewMockUUIDManager(ctrl)
+			mockTime := mockTime.NewMockRealTimeProvider(ctrl)
+
+			tt.prepareFunc(mockReminderRepo, mockUUID, mockTx, mockTime)
+			uc := NewReminderUsecase(mockTx, mockUUID, mockReminderRepo, mockTime)
+
+			ctx = context.WithValue(ctx, middleware.UserIDKey, testUserId)
+			actualRes, err := uc.GetReminder(ctx, tt.reminderId)
+			if tt.wantedError != nil {
+				if err == nil {
+					t.Fatalf("expected error %v, got nil", tt.wantedError)
+				}
+				assert.EqualError(t, err, tt.wantedError.Error())
+				return
+			}
+
+			assert.Equal(t, tt.wantedRes, actualRes)
+		})
+	}
+}

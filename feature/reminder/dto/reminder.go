@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	"github.com/MapMinder/mapminder_backend/internal/status"
 )
 
@@ -13,10 +12,17 @@ type Reminder struct {
 	// Radius      float64 `json:"radius" validate:"required"` the use's will not be able to set the radius it is a default value (atleast for the mvp)
 }
 
-// TODO: the dto should not know about the domain objects adding the
-// domain.Reminder here means dto is accessing a business object
-// will fix this in separate ticket(or a dedicated ticket for refactor)
 type ReminderRes struct {
 	Status status.Status
-	Result domain.Reminder `json:"result"`
+	Result ReminderResStruct `json:"result"`
+}
+
+type ReminderResStruct struct {
+	ReminderId  string  `json:"reminder_id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	Radius      float64 `json:"radius"`
+	Status      string  `json:"status"`
 }
