@@ -16,6 +16,7 @@ import (
 
 type ReminderUsecase interface {
 	CreateReminder(ctx context.Context, params dto.Reminder) (reminder domain.Reminder, err error)
+	GetReminder(ctx context.Context, reminderId string) (reminder domain.Reminder, err error)
 }
 
 type reminderUsecase struct {
@@ -68,9 +69,16 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 		}
 		return nil
 	})
+
+	return
+}
+
+func (u *reminderUsecase) GetReminder(ctx context.Context, reminderId string) (reminder domain.Reminder, err error) {
+	logger.Infof("reminder usecase: GetReminder")
+
+	reminder, err = u.ReminderRepository.GetReminder(ctx, reminderId)
 	if err != nil {
 		return
 	}
-
 	return
 }

@@ -10,6 +10,7 @@ import (
 	apperror "github.com/MapMinder/mapminder_backend/shared/appError"
 	"github.com/MapMinder/mapminder_backend/shared/validator"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ReminderHandler struct {
@@ -24,6 +25,7 @@ func NewReminderHandler(reminderUsecase usecase.ReminderUsecase) *ReminderHandle
 
 func (h *ReminderHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("/", h.CreateReminder)
+	r.GET("/:reminder_id", h.GetReminder)
 }
 
 func (h *ReminderHandler) CreateReminder(r *gin.Context) {
@@ -52,8 +54,50 @@ func (h *ReminderHandler) CreateReminder(r *gin.Context) {
 
 	res := dto.ReminderRes{
 		Status: status.Created,
-		Result: reminder,
+		Result: dto.ReminderResStruct{
+			ReminderId:  reminder.ReminderId,
+			Title:       reminder.Title,
+			Description: reminder.Description,
+			Latitude:    reminder.Latitude,
+			Longitude:   reminder.Longitude,
+			Radius:      reminder.Radius,
+			Status:      reminder.Status,
+		},
 	}
 
 	r.JSON(http.StatusCreated, res)
+}
+
+func (h *ReminderHandler) GetReminder(r *gin.Context) {
+	logger.Infof("Get Reminder Handler")
+	ctx := r.Request.Context()
+
+	reminderId := r.Param("reminder_id")
+	_, err := uuid.Parse(reminderId)
+	if err != nil {
+		logger.Errorw("Invalid ReminderId: ", err)
+		err = apperror.BadRequest()
+		r.Error(err)
+		return
+	}
+
+	reminder, err := h.ReminderUsecase.GetReminder(ctx, reminderId)
+	if err != nil {
+		return
+	}
+
+	res := dto.ReminderRes{
+		Status: status.Created,
+		Result: dto.ReminderResStruct{
+			ReminderId:  reminder.ReminderId,
+			Title:       reminder.Title,
+			Description: reminder.Description,
+			Latitude:    reminder.Latitude,
+			Longitude:   reminder.Longitude,
+			Radius:      reminder.Radius,
+			Status:      reminder.Status,
+		},
+	}
+
+	r.JSON(http.StatusOK, res)
 }

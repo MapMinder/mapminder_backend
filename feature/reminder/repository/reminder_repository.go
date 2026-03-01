@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	tx "github.com/MapMinder/mapminder_backend/internal/infrastructure/database"
@@ -12,6 +13,7 @@ import (
 
 type ReminderRepository interface {
 	Create(ctx context.Context, reminder domain.Reminder) (err error)
+	GetReminder(ctx context.Context, reminderId string) (reiminder domain.Reminder, err error)
 }
 
 type reminderRepository struct {
@@ -35,6 +37,29 @@ func (r *reminderRepository) Create(ctx context.Context, reminder domain.Reminde
 		logger.Errorw("Error creating reminder: ", err)
 		err = apperror.Internal()
 		return
+	}
+	return
+}
+
+// GetReminder
+func (r *reminderRepository) GetReminder(ctx context.Context, reminderId string) (reminder domain.Reminder, err error) {
+	logger.Infof("reminder repository: GetReminder")
+
+	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
+
+	if err = db.Where("reminder_id = ?", reminderId).Take(&reminder).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Infof("No records found for given reminderId")
+			err = nil
+			return
+		} else {
+			logger.Errorw("Internal error occurred: ", err)
+			err = apperror.Internal()
+			return
+		}
 	}
 	return
 }
