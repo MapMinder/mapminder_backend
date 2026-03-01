@@ -13,7 +13,6 @@ import (
 
 type ContextKey string
 
-// TODO: move this to the shared
 const UserIDKey ContextKey = "user_id"
 
 // JWTAuthHandler
@@ -65,8 +64,6 @@ func JWTAuthHandler() gin.HandlerFunc {
 	}
 }
 
-// TODO: move this to the shared with userIdKey
-// UserIDFromContext
 func UserIDFromContext(ctx context.Context) string {
 	userId, _ := ctx.Value(UserIDKey).(string)
 	logger.Info(userId)
