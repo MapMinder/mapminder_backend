@@ -8,8 +8,8 @@ import (
 
 	"github.com/MapMinder/mapminder_backend/feature/auth/handler/mock"
 	"github.com/MapMinder/mapminder_backend/internal/logger"
-	"github.com/MapMinder/mapminder_backend/internal/middleware"
 	apperror "github.com/MapMinder/mapminder_backend/shared/appError"
+	"github.com/MapMinder/mapminder_backend/shared/middleware"
 	"github.com/MapMinder/mapminder_backend/shared/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"

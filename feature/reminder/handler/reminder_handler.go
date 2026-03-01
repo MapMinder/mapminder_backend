@@ -32,14 +32,14 @@ func (h *ReminderHandler) CreateReminder(r *gin.Context) {
 
 	var req dto.Reminder
 	if err := r.ShouldBind(&req); err != nil {
-		logger.Errorw("Find To Bind Request", err)
+		logger.Errorw("Failed To Bind Request", err)
 		r.Error(apperror.BadRequest())
 		return
 	}
 
 	if err := validator.ValidateStruct(req); err != nil {
-		logger.Errorw("Failed To Bild Request", err)
-		r.Error(err)
+		logger.Errorw("Failed To Validate Request", err)
+		r.Error(apperror.BadRequest())
 		return
 	}
 
@@ -55,5 +55,5 @@ func (h *ReminderHandler) CreateReminder(r *gin.Context) {
 		Result: reminder,
 	}
 
-	r.JSON(http.StatusOK, res)
+	r.JSON(http.StatusCreated, res)
 }

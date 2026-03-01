@@ -11,10 +11,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type contextKey string
+type ContextKey string
 
 // TODO: move this to the shared
-const userIDKey contextKey = "user_id"
+const UserIDKey ContextKey = "user_id"
 
 // JWTAuthHandler
 func JWTAuthHandler() gin.HandlerFunc {
@@ -57,8 +57,8 @@ func JWTAuthHandler() gin.HandlerFunc {
 			return
 		}
 		userId := claims.Subject
-		c.Set(string(userIDKey), userId)
-		ctx := context.WithValue(c.Request.Context(), userIDKey, userId)
+		c.Set(string(UserIDKey), userId)
+		ctx := context.WithValue(c.Request.Context(), UserIDKey, userId)
 		logger.Infof("sss", "ctx", ctx)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
@@ -68,7 +68,7 @@ func JWTAuthHandler() gin.HandlerFunc {
 // TODO: move this to the shared with userIdKey
 // UserIDFromContext
 func UserIDFromContext(ctx context.Context) string {
-	userId, _ := ctx.Value(userIDKey).(string)
+	userId, _ := ctx.Value(UserIDKey).(string)
 	logger.Info(userId)
 	return userId
 }

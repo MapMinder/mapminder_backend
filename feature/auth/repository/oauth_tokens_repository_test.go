@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/MapMinder/mapminder_backend/feature/auth/domain"
-	"github.com/MapMinder/mapminder_backend/feature/auth/repository"
 	"github.com/MapMinder/mapminder_backend/internal/logger"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/mysql"
@@ -81,7 +80,7 @@ func TestOauthTokenRepository_GetOauthInformation(t *testing.T) {
 
 			tt.setupMock(mock)
 
-			repo := repository.NewOauthTokenRepository(db)
+			repo := NewOauthTokenRepository(db)
 
 			var got domain.OauthToken
 			var err error
@@ -134,7 +133,7 @@ func TestOauthRepository_CreateOauthToken(t *testing.T) {
 
 			tt.setupMock(mock)
 
-			repo := repository.NewOauthTokenRepository(db)
+			repo := NewOauthTokenRepository(db)
 
 			var got domain.OauthToken
 			var err error
