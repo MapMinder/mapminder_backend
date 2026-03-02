@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/MapMinder/mapminder_backend/feature/reminder/dto"
+	"github.com/MapMinder/mapminder_backend/feature/reminder/mapper"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/usecase"
 	"github.com/MapMinder/mapminder_backend/internal/logger"
 	"github.com/MapMinder/mapminder_backend/internal/status"
@@ -26,6 +27,7 @@ func NewReminderHandler(reminderUsecase usecase.ReminderUsecase) *ReminderHandle
 func (h *ReminderHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("/", h.CreateReminder)
 	r.GET("/:reminder_id", h.GetReminder)
+	r.GET("/", h.GetReminders)
 }
 
 func (h *ReminderHandler) CreateReminder(r *gin.Context) {
@@ -69,7 +71,7 @@ func (h *ReminderHandler) CreateReminder(r *gin.Context) {
 }
 
 func (h *ReminderHandler) GetReminder(r *gin.Context) {
-	logger.Infof("Get Reminder Handler")
+	logger.Infof("reminde handler: GetReminder")
 	ctx := r.Request.Context()
 
 	reminderId := r.Param("reminder_id")
@@ -83,20 +85,34 @@ func (h *ReminderHandler) GetReminder(r *gin.Context) {
 
 	reminder, err := h.ReminderUsecase.GetReminder(ctx, reminderId)
 	if err != nil {
+		r.Error(err)
 		return
 	}
 
 	res := dto.ReminderRes{
-		Status: status.Created,
-		Result: dto.ReminderResStruct{
-			ReminderId:  reminder.ReminderId,
-			Title:       reminder.Title,
-			Description: reminder.Description,
-			Latitude:    reminder.Latitude,
-			Longitude:   reminder.Longitude,
-			Radius:      reminder.Radius,
-			Status:      reminder.Status,
-		},
+		Status: status.Success,
+		Result: mapper.MapReminder(reminder),
+	}
+
+	r.JSON(http.StatusOK, res)
+}
+
+func (h *ReminderHandler) GetReminders(r *gin.Context) {
+	logger.Infof("reminde handler: GetReminders")
+	ctx := r.Request.Context()
+
+	requestParam := r.Query("status")
+
+	reminders, err := h.ReminderUsecase.GetReminders(ctx, requestParam)
+	if err != nil {
+		r.Error(err)
+		return
+	}
+
+	res := dto.RemindersRes{
+		Status: status.Success,
+		Total:  len(reminders),
+		Result: mapper.MapReminders(reminders),
 	}
 
 	r.JSON(http.StatusOK, res)

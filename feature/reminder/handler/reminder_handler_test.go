@@ -43,7 +43,7 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
 		Radius:      domain.DefaultRadius,
-		Status:      string(domain.CreatedStatus),
+		Status:      string(domain.ActiveStatus),
 	}
 	tests := []struct {
 		name           string
@@ -165,7 +165,7 @@ func TestReminderHandler_GetReminder(t *testing.T) {
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
 		Radius:      domain.DefaultRadius,
-		Status:      string(domain.CreatedStatus),
+		Status:      string(domain.ActiveStatus),
 	}
 
 	tests := []struct {

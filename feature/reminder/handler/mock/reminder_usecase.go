@@ -65,3 +65,18 @@ func (mr *MockReminderUsecaseMockRecorder) GetReminder(ctx, reminderId interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReminder", reflect.TypeOf((*MockReminderUsecase)(nil).GetReminder), ctx, reminderId)
 }
+
+// GetReminders mocks base method.
+func (m *MockReminderUsecase) GetReminders(ctx context.Context, status string) ([]domain.Reminder, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReminders", ctx, status)
+	ret0, _ := ret[0].([]domain.Reminder)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReminders indicates an expected call of GetReminders.
+func (mr *MockReminderUsecaseMockRecorder) GetReminders(ctx, status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReminders", reflect.TypeOf((*MockReminderUsecase)(nil).GetReminders), ctx, status)
+}

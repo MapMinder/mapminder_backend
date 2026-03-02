@@ -14,6 +14,7 @@ import (
 type ReminderRepository interface {
 	Create(ctx context.Context, reminder domain.Reminder) (err error)
 	GetReminder(ctx context.Context, reminderId string) (reiminder domain.Reminder, err error)
+	GetReminders(ctx context.Context, userId string, status string) (reminders []domain.Reminder, err error)
 }
 
 type reminderRepository struct {
@@ -61,5 +62,33 @@ func (r *reminderRepository) GetReminder(ctx context.Context, reminderId string)
 			return
 		}
 	}
+	return
+}
+
+func (r *reminderRepository) GetReminders(ctx context.Context, userId string, status string) (reminders []domain.Reminder, err error) {
+	logger.Infof("reminder repository : GetReminders")
+
+	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
+
+	query := db.Where("user_id = ?", userId)
+	if status != "" {
+		query = db.Where("status = ?", status)
+	}
+
+	if err = query.Find(&reminders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Infof("No records found for given reminderId")
+			err = nil
+			return
+		} else {
+			logger.Errorw("Internal error occurred: ", err)
+			err = apperror.Internal()
+			return
+		}
+	}
+
 	return
 }

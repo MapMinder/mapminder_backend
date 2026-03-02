@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"slices"
+	"time"
+)
 
 type (
 	ReminderStatus string
@@ -8,8 +11,10 @@ type (
 )
 
 const (
-	CreatedStatus = ReminderStatus("created")
-	DefaultRadius = 200.00
+	ActiveStatus    = ReminderStatus("active")
+	PausedStatus    = ReminderStatus("paused")
+	CompletedStatus = ReminderStatus("completed")
+	DefaultRadius   = 200.00
 )
 
 type Reminder struct {
@@ -27,4 +32,9 @@ type Reminder struct {
 
 func (Reminder) TableName() string {
 	return "reminder"
+}
+
+func IsValidStatus(status string) bool {
+	statusList := []string{string(ActiveStatus), string(PausedStatus), string(CompletedStatus)}
+	return slices.Contains(statusList, status)
 }

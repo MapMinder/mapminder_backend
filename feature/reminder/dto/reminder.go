@@ -16,6 +16,11 @@ type ReminderRes struct {
 	Status status.Status
 	Result ReminderResStruct `json:"result"`
 }
+type RemindersRes struct {
+	Status status.Status
+	Total  int
+	Result []ReminderResStruct `json:"result"`
+}
 
 type ReminderResStruct struct {
 	ReminderId  string  `json:"reminder_id"`
