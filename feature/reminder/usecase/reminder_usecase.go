@@ -17,6 +17,7 @@ import (
 type ReminderUsecase interface {
 	CreateReminder(ctx context.Context, params dto.Reminder) (reminder domain.Reminder, err error)
 	GetReminder(ctx context.Context, reminderId string) (reminder domain.Reminder, err error)
+	GetReminders(ctx context.Context, status string) (reminders []domain.Reminder, err error)
 }
 
 type reminderUsecase struct {
@@ -59,7 +60,7 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 			Latitude:    params.Latitude,
 			Longitude:   params.Longitude,
 			Radius:      domain.DefaultRadius,
-			Status:      string(domain.CreatedStatus),
+			Status:      string(domain.ActiveStatus),
 		}
 
 		err = u.ReminderRepository.Create(txCtx, reminder)
@@ -77,6 +78,23 @@ func (u *reminderUsecase) GetReminder(ctx context.Context, reminderId string) (r
 	logger.Infof("reminder usecase: GetReminder")
 
 	reminder, err = u.ReminderRepository.GetReminder(ctx, reminderId)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (u *reminderUsecase) GetReminders(ctx context.Context, status string) (reminders []domain.Reminder, err error) {
+	logger.Infof("reminder usecase: GetReminders")
+	userId := middleware.UserIDFromContext(ctx)
+
+	if status != "" && !domain.IsValidStatus(status) {
+		logger.Errorw("Invalid status provided: ", apperror.BadRequest(), "status", status)
+		err = apperror.BadRequest()
+		return
+	}
+
+	reminders, err = u.ReminderRepository.GetReminders(ctx, userId, status)
 	if err != nil {
 		return
 	}

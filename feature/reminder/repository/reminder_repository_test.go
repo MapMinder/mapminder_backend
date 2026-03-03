@@ -55,7 +55,7 @@ func TestReminderRepository_Create(t *testing.T) {
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
 		Radius:      domain.DefaultRadius,
-		Status:      string(domain.CreatedStatus),
+		Status:      string(domain.ActiveStatus),
 	}
 
 	tests := []struct {
@@ -70,7 +70,7 @@ func TestReminderRepository_Create(t *testing.T) {
 			setupMock: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
 				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `reminder` (`reminder_id`,`user_id`,`title`,`description`,`latitude`,`longitude`,`radius`,`status`,`last_triggered_at`,`completed_at`) VALUES (?,?,?,?,?,?,?,?,?,?)")).
-					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.CreatedStatus, nil, nil).
+					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 				mock.ExpectCommit()
 			},
@@ -82,7 +82,7 @@ func TestReminderRepository_Create(t *testing.T) {
 			setupMock: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
 				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `reminder` (`reminder_id`,`user_id`,`title`,`description`,`latitude`,`longitude`,`radius`,`status`,`last_triggered_at`,`completed_at`) VALUES (?,?,?,?,?,?,?,?,?,?)")).
-					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.CreatedStatus, nil, nil).
+					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil).
 					WillReturnError(apperror.Internal())
 				mock.ExpectRollback()
 			},
@@ -127,7 +127,7 @@ func TestReminderRepository_GetReminder(t *testing.T) {
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
 		Radius:      domain.DefaultRadius,
-		Status:      string(domain.CreatedStatus),
+		Status:      string(domain.ActiveStatus),
 	}
 
 	tests := []struct {
@@ -142,7 +142,7 @@ func TestReminderRepository_GetReminder(t *testing.T) {
 			wantErr:    false,
 			setupMock: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"}).
-					AddRow(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.CreatedStatus, nil, nil)
+					AddRow(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil)
 				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE reminder_id = ? LIMIT ?")).
 					WithArgs(testReminderId, 1).
 					WillReturnRows(rows)
@@ -194,6 +194,182 @@ func TestReminderRepository_GetReminder(t *testing.T) {
 					assert.Equal(t, expectedReminder.Radius, reminder.Radius)
 					assert.Equal(t, expectedReminder.Status, reminder.Status)
 				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestReminderRepository_GetReminders(t *testing.T) {
+	logger.InitForTest()
+	testUserId := "test-user-id"
+	secondTestReminderId := "test-remidner-uuid-2"
+	testReminderId := "test-reminder-uuid"
+	testTitle := "test title"
+	testDescription := "test description"
+	testLatitude := 20.00
+	testLongitude := 20.00
+
+	tests := []struct {
+		name         string
+		status       string
+		userId       string
+		wantErr      bool
+		wantReminder []domain.Reminder
+		setupMock    func(mock sqlmock.Sqlmock)
+	}{
+		{
+			name:    "success when no status is provided",
+			userId:  testUserId,
+			wantErr: false,
+			wantReminder: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.ActiveStatus),
+				},
+				{
+					ReminderId:  secondTestReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.ActiveStatus),
+				},
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"}).
+					AddRow(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil).
+					AddRow(secondTestReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil)
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ?")).
+					WithArgs(testUserId).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name:    "when status active is provided",
+			userId:  testUserId,
+			status:  string(domain.ActiveStatus),
+			wantErr: false,
+			wantReminder: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.ActiveStatus),
+				},
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"}).
+					AddRow(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil)
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ? AND status = ?")).
+					WithArgs(testUserId, domain.ActiveStatus).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name:    "when status paused is provided",
+			userId:  testUserId,
+			status:  string(domain.PausedStatus),
+			wantErr: false,
+			wantReminder: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.PausedStatus),
+				},
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"}).
+					AddRow(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.PausedStatus, nil, nil)
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ? AND status = ?")).
+					WithArgs(testUserId, domain.PausedStatus).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name:    "when status completed is provided",
+			userId:  testUserId,
+			status:  string(domain.CompletedStatus),
+			wantErr: false,
+			wantReminder: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.CompletedStatus),
+				},
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"}).
+					AddRow(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.CompletedStatus, nil, nil)
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ? AND status = ?")).
+					WithArgs(testUserId, domain.CompletedStatus).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name:         "when status active is provided but no records match",
+			userId:       testUserId,
+			status:       string(domain.ActiveStatus),
+			wantErr:      false,
+			wantReminder: []domain.Reminder{},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"})
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ? AND status = ?")).
+					WithArgs(testUserId, domain.ActiveStatus).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name:         "when status active is provided but no records match",
+			userId:       testUserId,
+			status:       string(domain.ActiveStatus),
+			wantErr:      true,
+			wantReminder: []domain.Reminder{},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ? AND status = ?")).
+					WithArgs(testUserId, domain.ActiveStatus).
+					WillReturnError(apperror.Internal())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, cleanup := setupMockDB(t)
+			defer cleanup()
+
+			tt.setupMock(mock)
+
+			repo := NewReminderRepository(db)
+			reminder, err := repo.GetReminders(context.Background(), tt.userId, tt.status)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantReminder, reminder)
 			}
 
 			assert.NoError(t, mock.ExpectationsWereMet())
