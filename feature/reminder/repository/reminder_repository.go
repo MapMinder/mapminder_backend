@@ -75,7 +75,7 @@ func (r *reminderRepository) GetReminders(ctx context.Context, userId string, st
 
 	query := db.Where("user_id = ?", userId)
 	if status != "" {
-		query = db.Where("status = ?", status)
+		query = query.Where("status = ?", status)
 	}
 
 	if err = query.Find(&reminders).Error; err != nil {

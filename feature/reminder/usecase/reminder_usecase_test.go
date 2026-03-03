@@ -232,3 +232,256 @@ func TestGetReminder(t *testing.T) {
 		})
 	}
 }
+
+func TestGetReminders(t *testing.T) {
+	logger.InitForTest()
+	ctx := context.Background()
+	testUserId := "test-user-id"
+	testReminderId := "test-reminder-uuid"
+	secondTestReminderId := "test-reminder-uuid"
+	testTitle := "test title"
+	testDescription := "test description"
+	testLatitude := 20.00
+	testLongitude := 20.00
+
+	tests := []struct {
+		name        string
+		status      string
+		prepareFunc func(
+			mrr *mock.MockReminderRepository,
+			mUUID *mockUUID.MockUUIDManager,
+			mTx *txMock.MockManager,
+			mTime *mockTime.MockRealTimeProvider,
+		)
+		wantedError error
+		wantedRes   []domain.Reminder
+	}{
+		{
+			name: "success when status is not provided",
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminders(gomock.Any(), testUserId, "").Return(
+					[]domain.Reminder{
+						{
+							ReminderId:  testReminderId,
+							UserId:      testUserId,
+							Title:       testTitle,
+							Description: testDescription,
+							Latitude:    testLatitude,
+							Longitude:   testLongitude,
+							Radius:      domain.DefaultRadius,
+							Status:      string(domain.ActiveStatus),
+						},
+						{
+							ReminderId:  secondTestReminderId,
+							UserId:      testUserId,
+							Title:       testTitle,
+							Description: testDescription,
+							Latitude:    testLatitude,
+							Longitude:   testLongitude,
+							Radius:      domain.DefaultRadius,
+							Status:      string(domain.PausedStatus),
+						},
+					}, nil,
+				)
+			},
+			wantedError: nil,
+			wantedRes: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.ActiveStatus),
+				},
+				{
+					ReminderId:  secondTestReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.PausedStatus),
+				},
+			},
+		},
+		{
+			name:   "fail when invalid status is provided",
+			status: "invalid-status",
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+			},
+			wantedError: apperror.BadRequest(),
+			wantedRes:   []domain.Reminder{},
+		},
+		{
+			name:   "success when status is completed",
+			status: string(domain.CompletedStatus),
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminders(gomock.Any(), testUserId, string(domain.CompletedStatus)).Return(
+					[]domain.Reminder{
+						{
+							ReminderId:  testReminderId,
+							UserId:      testUserId,
+							Title:       testTitle,
+							Description: testDescription,
+							Latitude:    testLatitude,
+							Longitude:   testLongitude,
+							Radius:      domain.DefaultRadius,
+							Status:      string(domain.CompletedStatus),
+						},
+						{
+							ReminderId:  secondTestReminderId,
+							UserId:      testUserId,
+							Title:       testTitle,
+							Description: testDescription,
+							Latitude:    testLatitude,
+							Longitude:   testLongitude,
+							Radius:      domain.DefaultRadius,
+							Status:      string(domain.CompletedStatus),
+						},
+					}, nil,
+				)
+			},
+			wantedError: nil,
+			wantedRes: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.CompletedStatus),
+				},
+				{
+					ReminderId:  secondTestReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.CompletedStatus),
+				},
+			},
+		},
+		{
+			name:   "success when status is paused",
+			status: string(domain.PausedStatus),
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminders(gomock.Any(), testUserId, string(domain.PausedStatus)).Return(
+					[]domain.Reminder{
+						{
+							ReminderId:  testReminderId,
+							UserId:      testUserId,
+							Title:       testTitle,
+							Description: testDescription,
+							Latitude:    testLatitude,
+							Longitude:   testLongitude,
+							Radius:      domain.DefaultRadius,
+							Status:      string(domain.PausedStatus),
+						},
+						{
+							ReminderId:  secondTestReminderId,
+							UserId:      testUserId,
+							Title:       testTitle,
+							Description: testDescription,
+							Latitude:    testLatitude,
+							Longitude:   testLongitude,
+							Radius:      domain.DefaultRadius,
+							Status:      string(domain.PausedStatus),
+						},
+					}, nil,
+				)
+			},
+			wantedError: nil,
+			wantedRes: []domain.Reminder{
+				{
+					ReminderId:  testReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.PausedStatus),
+				},
+				{
+					ReminderId:  secondTestReminderId,
+					UserId:      testUserId,
+					Title:       testTitle,
+					Description: testDescription,
+					Latitude:    testLatitude,
+					Longitude:   testLongitude,
+					Radius:      domain.DefaultRadius,
+					Status:      string(domain.PausedStatus),
+				},
+			},
+		},
+		{
+			name:   "fail when invalid status is provided",
+			status: string(domain.ActiveStatus),
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminders(gomock.Any(), testUserId, string(domain.ActiveStatus)).Return([]domain.Reminder{}, apperror.Internal())
+			},
+			wantedError: apperror.Internal(),
+			wantedRes:   []domain.Reminder{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockReminderRepo := mock.NewMockReminderRepository(ctrl)
+			mockTx := txMock.NewMockManager(ctrl)
+			mockUUID := mockUUID.NewMockUUIDManager(ctrl)
+			mockTime := mockTime.NewMockRealTimeProvider(ctrl)
+
+			tt.prepareFunc(mockReminderRepo, mockUUID, mockTx, mockTime)
+			uc := NewReminderUsecase(mockTx, mockUUID, mockReminderRepo, mockTime)
+
+			ctx = context.WithValue(ctx, middleware.UserIDKey, testUserId)
+			actualRes, err := uc.GetReminders(ctx, tt.status)
+			if tt.wantedError != nil {
+				if err == nil {
+					t.Fatalf("expected error %v, got nil", tt.wantedError)
+				}
+				assert.EqualError(t, err, tt.wantedError.Error())
+				return
+			}
+
+			assert.Equal(t, tt.wantedRes, actualRes)
+		})
+	}
+}

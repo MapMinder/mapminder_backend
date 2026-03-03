@@ -6,7 +6,9 @@ import (
 )
 
 // MapReminders maps multiple []domain.Reminder to []dto.ReminderResStruct
-func MapReminders(targetReminders []domain.Reminder) (reminders []dto.ReminderResStruct) {
+func MapReminders(targetReminders []domain.Reminder) []dto.ReminderResStruct {
+	reminders := make([]dto.ReminderResStruct, 0, len(targetReminders))
+
 	for _, reminder := range targetReminders {
 		reminders = append(reminders, dto.ReminderResStruct{
 			ReminderId:  reminder.ReminderId,
@@ -18,7 +20,7 @@ func MapReminders(targetReminders []domain.Reminder) (reminders []dto.ReminderRe
 			Status:      reminder.Status,
 		})
 	}
-	return
+	return reminders
 }
 
 // MapReminder maps domain.Reminder to dto.ReminderResStruct

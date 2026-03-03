@@ -25,9 +25,9 @@ func NewReminderHandler(reminderUsecase usecase.ReminderUsecase) *ReminderHandle
 }
 
 func (h *ReminderHandler) RegisterRoutes(r *gin.RouterGroup) {
-	r.POST("/", h.CreateReminder)
+	r.POST("", h.CreateReminder)
 	r.GET("/:reminder_id", h.GetReminder)
-	r.GET("/", h.GetReminders)
+	r.GET("", h.GetReminders)
 }
 
 func (h *ReminderHandler) CreateReminder(r *gin.Context) {
