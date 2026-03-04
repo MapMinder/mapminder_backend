@@ -18,6 +18,7 @@ type ReminderUsecase interface {
 	CreateReminder(ctx context.Context, params dto.Reminder) (reminder domain.Reminder, err error)
 	GetReminder(ctx context.Context, reminderId string) (reminder domain.Reminder, err error)
 	GetReminders(ctx context.Context, status string) (reminders []domain.Reminder, err error)
+	DeleteReminder(ctx context.Context, reminderId string) (err error)
 }
 
 type reminderUsecase struct {
@@ -98,5 +99,15 @@ func (u *reminderUsecase) GetReminders(ctx context.Context, status string) (remi
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (u *reminderUsecase) DeleteReminder(ctx context.Context, reminderId string) (err error) {
+	logger.Infof("reminder usecase: DeleteReminder")
+
+	err = u.TxManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+		err = u.ReminderRepository.DeleteReminder(ctx, reminderId)
+		return nil
+	})
 	return
 }

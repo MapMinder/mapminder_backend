@@ -28,6 +28,7 @@ func (h *ReminderHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("", h.CreateReminder)
 	r.GET("/:reminder_id", h.GetReminder)
 	r.GET("", h.GetReminders)
+	r.DELETE("/:reminder_id", h.DeleteReminder)
 }
 
 func (h *ReminderHandler) CreateReminder(r *gin.Context) {
@@ -116,4 +117,26 @@ func (h *ReminderHandler) GetReminders(r *gin.Context) {
 	}
 
 	r.JSON(http.StatusOK, res)
+}
+
+func (h *ReminderHandler) DeleteReminder(r *gin.Context) {
+	logger.Infof("reminde handler: DeleteReminder")
+	ctx := r.Request.Context()
+
+	reminderId := r.Param("reminder_id")
+	_, err := uuid.Parse(reminderId)
+	if err != nil {
+		logger.Errorw("Invalid ReminderId: ", err)
+		err = apperror.BadRequest()
+		r.Error(err)
+		return
+	}
+
+	err = h.ReminderUsecase.DeleteReminder(ctx, reminderId)
+	if err != nil {
+		r.Error(err)
+		return
+	}
+
+	r.JSON(http.StatusOK, status.Success)
 }

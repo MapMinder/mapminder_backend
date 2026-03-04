@@ -49,6 +49,20 @@ func (mr *MockReminderRepositoryMockRecorder) Create(ctx, reminder interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockReminderRepository)(nil).Create), ctx, reminder)
 }
 
+// DeleteReminder mocks base method.
+func (m *MockReminderRepository) DeleteReminder(ctx context.Context, reminderId string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteReminder", ctx, reminderId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteReminder indicates an expected call of DeleteReminder.
+func (mr *MockReminderRepositoryMockRecorder) DeleteReminder(ctx, reminderId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReminder", reflect.TypeOf((*MockReminderRepository)(nil).DeleteReminder), ctx, reminderId)
+}
+
 // GetReminder mocks base method.
 func (m *MockReminderRepository) GetReminder(ctx context.Context, reminderId string) (domain.Reminder, error) {
 	m.ctrl.T.Helper()
