@@ -376,3 +376,70 @@ func TestReminderRepository_GetReminders(t *testing.T) {
 		})
 	}
 }
+
+func TestReminderRepository_DeleteReminder(t *testing.T) {
+	logger.InitForTest()
+	testReminderId := "test-reminder-id"
+	tests := []struct {
+		name       string
+		reminderId string
+		wantErr    bool
+		setupMock  func(mock sqlmock.Sqlmock)
+	}{
+		{
+			name:       "success",
+			reminderId: testReminderId,
+			wantErr:    false,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec("DELETE FROM `reminder` WHERE reminder_id = ?").
+					WithArgs(testReminderId).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectCommit()
+			},
+		},
+		{
+			name:       "returns error when internal error occurs",
+			reminderId: testReminderId,
+			wantErr:    true,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec("DELETE FROM `reminder` WHERE reminder_id = ?").
+					WithArgs(testReminderId).
+					WillReturnError(apperror.Internal())
+				mock.ExpectRollback()
+			},
+		},
+		{
+			name:       "returns not found error when no rows affected",
+			reminderId: testReminderId,
+			wantErr:    true,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec("DELETE FROM `reminder` WHERE reminder_id = ?").
+					WithArgs(testReminderId).
+					WillReturnResult(sqlmock.NewResult(0, 0))
+				mock.ExpectCommit()
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, cleanup := setupMockDB(t)
+			defer cleanup()
+
+			tt.setupMock(mock)
+
+			repo := NewReminderRepository(db)
+			err := repo.DeleteReminder(context.Background(), tt.reminderId)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
