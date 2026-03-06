@@ -104,7 +104,7 @@ func (r *reminderRepository) DeleteReminder(ctx context.Context, reminderId stri
 
 	res := db.WithContext(ctx).Where("reminder_id = ?", reminderId).Delete(&domain.Reminder{})
 	if res.Error != nil {
-		logger.Errorw("Internal error occurred: ", err)
+		logger.Errorw("Internal error occurred: ", res.Error)
 		err = apperror.Internal()
 		return
 	}
