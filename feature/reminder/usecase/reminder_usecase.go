@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/dto"
@@ -22,6 +23,7 @@ type ReminderUsecase interface {
 	GetReminders(ctx context.Context, status string) (reminders []domain.Reminder, err error)
 	DeleteReminder(ctx context.Context, reminderId string) (err error)
 	UpdateReminder(ctx context.Context, reminderId string, reminder dto.UpdateReminder) (updatedReminder domain.Reminder, err error)
+	UpdateLastTriggeredAt(ctx context.Context, reminderId string) (shouldNotify bool, err error)
 }
 
 type reminderUsecase struct {
@@ -151,5 +153,56 @@ func (u reminderUsecase) UpdateReminder(ctx context.Context, reminderId string, 
 
 		return nil
 	})
+	return
+}
+
+func (u reminderUsecase) UpdateLastTriggeredAt(ctx context.Context, reminderId string) (shouldNotify bool, err error) {
+	logger.Infof("reminder usecase: UpdateReminder")
+
+	userId := middleware.UserIDFromContext(ctx)
+
+	err = u.TxManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+		reminder, err := u.ReminderRepository.GetReminder(txCtx, reminderId)
+		if err != nil {
+			return err
+		}
+
+		if reminder.UserId != userId {
+			logger.Errorw("Invalid access reminder does not belong to user: ", apperror.Unauthorized(), "reminder_id: ", reminderId, "user_id: ", userId)
+			err = apperror.Unauthorized()
+			return err
+		}
+
+		now := u.TimeProvider.Now()
+		shouldNotify = u.shouldNotify(reminder, now)
+		if !shouldNotify {
+			logger.Infof("Cooldown in process no notification will be sent")
+			return nil
+		}
+
+		err = u.ReminderRepository.UpdateLastTriggeredAt(txCtx, reminderId, now)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	return
+}
+
+func (u reminderUsecase) shouldNotify(reminder domain.Reminder, now time.Time) (shouldNotify bool) {
+	if reminder.Status != string(domain.ActiveStatus) {
+		shouldNotify = false
+		return
+	}
+
+	if reminder.LastTriggeredAt == nil {
+		shouldNotify = true
+		return
+	}
+
+	tenMinsBeforeNow := now.Add(-10 * time.Minute)
+	shouldNotify = reminder.LastTriggeredAt.Before(tenMinsBeforeNow)
+
 	return
 }

@@ -95,6 +95,21 @@ func (mr *MockReminderUsecaseMockRecorder) GetReminders(ctx, status interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReminders", reflect.TypeOf((*MockReminderUsecase)(nil).GetReminders), ctx, status)
 }
 
+// UpdateLastTriggeredAt mocks base method.
+func (m *MockReminderUsecase) UpdateLastTriggeredAt(ctx context.Context, reminderId string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLastTriggeredAt", ctx, reminderId)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateLastTriggeredAt indicates an expected call of UpdateLastTriggeredAt.
+func (mr *MockReminderUsecaseMockRecorder) UpdateLastTriggeredAt(ctx, reminderId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastTriggeredAt", reflect.TypeOf((*MockReminderUsecase)(nil).UpdateLastTriggeredAt), ctx, reminderId)
+}
+
 // UpdateReminder mocks base method.
 func (m *MockReminderUsecase) UpdateReminder(ctx context.Context, reminderId string, reminder dto.UpdateReminder) (domain.Reminder, error) {
 	m.ctrl.T.Helper()

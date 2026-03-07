@@ -28,6 +28,14 @@ type RemindersRes struct {
 	Total  int
 	Result []ReminderResStruct `json:"result"`
 }
+type UpdateLastReminderRes struct {
+	Status status.Status
+	Result Notify `json:"result"`
+}
+
+type Notify struct {
+	Notify bool `json:"notify"`
+}
 
 type ReminderResStruct struct {
 	ReminderId  string  `json:"reminder_id"`

@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/dto"
@@ -648,6 +649,204 @@ func TestReminderUsecase_UpdateReminder(t *testing.T) {
 
 			ctx = context.WithValue(ctx, middleware.UserIDKey, testUserId)
 			actualRes, err := uc.UpdateReminder(ctx, tt.reminderId, tt.args)
+			if tt.wantedError != nil {
+				if err == nil {
+					t.Fatalf("expected error %v, got nil", tt.wantedError)
+				}
+				assert.EqualError(t, err, tt.wantedError.Error())
+				return
+			}
+
+			assert.Equal(t, tt.wantedRes, actualRes)
+		})
+	}
+}
+
+func TestReminderUsecase_UpdateLastTriggeredAt(t *testing.T) {
+	logger.InitForTest()
+	ctx := context.Background()
+	testUserId := "test-user-id"
+	testReminderId := "test-reminder-uuid"
+	testTimeNow := time.Date(2026, 3, 7, 10, 10, 0, 0, time.UTC)
+	testTimeInCoolDown := time.Date(2026, 3, 7, 10, 8, 0, 0, time.UTC)
+	testTimePastCooldown := time.Date(2026, 3, 7, 9, 0o0, 0, 0, time.UTC)
+
+	testReminder := domain.Reminder{
+		ReminderId: testReminderId,
+		UserId:     testUserId,
+		Status:     string(domain.ActiveStatus),
+	}
+
+	testInCooldownReminder := domain.Reminder{
+		ReminderId:      testReminderId,
+		UserId:          testUserId,
+		Status:          string(domain.ActiveStatus),
+		LastTriggeredAt: &testTimeInCoolDown,
+	}
+
+	testPastCooldownReminder := domain.Reminder{
+		ReminderId:      testReminderId,
+		UserId:          testUserId,
+		Status:          string(domain.ActiveStatus),
+		LastTriggeredAt: &testTimePastCooldown,
+	}
+
+	testPausedStatusReminder := domain.Reminder{
+		ReminderId: testReminderId,
+		UserId:     testUserId,
+		Status:     string(domain.PausedStatus),
+	}
+
+	testCompletedStatusReminder := domain.Reminder{
+		ReminderId: testReminderId,
+		UserId:     testUserId,
+		Status:     string(domain.PausedStatus),
+	}
+
+	testInvalidUserReminder := domain.Reminder{
+		ReminderId: testReminderId,
+		UserId:     "invalid-user-id",
+		Status:     string(domain.ActiveStatus),
+	}
+
+	tests := []struct {
+		name        string
+		reminderId  string
+		prepareFunc func(
+			mrr *mock.MockReminderRepository,
+			mUUID *mockUUID.MockUUIDManager,
+			mTx *txMock.MockManager,
+			mTime *mockTime.MockRealTimeProvider,
+		)
+		wantedError error
+		wantedRes   bool
+	}{
+		{
+			name:       "success",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testReminder, nil)
+				mTime.EXPECT().Now().Return(testTimeNow)
+				mrr.EXPECT().UpdateLastTriggeredAt(gomock.Any(), testReminderId, testTimeNow).Return(nil)
+			},
+			wantedError: nil,
+			wantedRes:   true,
+		},
+		{
+			name:       "success when reminder notification is still on cooldown",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testInCooldownReminder, nil)
+				mTime.EXPECT().Now().Return(testTimeNow)
+			},
+			wantedError: nil,
+			wantedRes:   false,
+		},
+		{
+			name:       "success when reminder can be notified",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testPastCooldownReminder, nil)
+				mTime.EXPECT().Now().Return(testTimeNow)
+				mrr.EXPECT().UpdateLastTriggeredAt(gomock.Any(), testReminderId, testTimeNow).Return(nil)
+			},
+			wantedError: nil,
+			wantedRes:   true,
+		},
+		{
+			name:       "success when reminder status is paused",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testPausedStatusReminder, nil)
+				mTime.EXPECT().Now().Return(testTimeNow)
+			},
+			wantedError: nil,
+			wantedRes:   false,
+		},
+		{
+			name:       "success when reminder status is completed",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testCompletedStatusReminder, nil)
+				mTime.EXPECT().Now().Return(testTimeNow)
+			},
+			wantedError: nil,
+			wantedRes:   false,
+		},
+		{
+			name:       "failed to update last triggered at",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testReminder, nil)
+				mTime.EXPECT().Now().Return(testTimeNow)
+				mrr.EXPECT().UpdateLastTriggeredAt(gomock.Any(), testReminderId, testTimeNow).Return(apperror.Internal())
+			},
+			wantedError: apperror.Internal(),
+			wantedRes:   false,
+		},
+		{
+			name:       "failed to when reminder does not belong to user",
+			reminderId: testReminderId,
+			prepareFunc: func(
+				mrr *mock.MockReminderRepository,
+				mUUID *mockUUID.MockUUIDManager,
+				mTx *txMock.MockManager,
+				mTime *mockTime.MockRealTimeProvider,
+			) {
+				mrr.EXPECT().GetReminder(gomock.Any(), testReminderId).Return(testInvalidUserReminder, nil)
+			},
+			wantedError: apperror.Unauthorized(),
+			wantedRes:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockReminderRepo := mock.NewMockReminderRepository(ctrl)
+			mockTx := txMock.NewMockManager(ctrl)
+			mockUUID := mockUUID.NewMockUUIDManager(ctrl)
+			mockTime := mockTime.NewMockRealTimeProvider(ctrl)
+
+			mockWithinTransaction(t, mockTx)
+
+			tt.prepareFunc(mockReminderRepo, mockUUID, mockTx, mockTime)
+			uc := NewReminderUsecase(mockTx, mockUUID, mockReminderRepo, mockTime)
+
+			ctx = context.WithValue(ctx, middleware.UserIDKey, testUserId)
+			actualRes, err := uc.UpdateLastTriggeredAt(ctx, tt.reminderId)
 			if tt.wantedError != nil {
 				if err == nil {
 					t.Fatalf("expected error %v, got nil", tt.wantedError)

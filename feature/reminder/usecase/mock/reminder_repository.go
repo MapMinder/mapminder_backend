@@ -7,6 +7,7 @@ package mock
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	domain "github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	gomock "github.com/golang/mock/gomock"
@@ -91,6 +92,20 @@ func (m *MockReminderRepository) GetReminders(ctx context.Context, userId, statu
 func (mr *MockReminderRepositoryMockRecorder) GetReminders(ctx, userId, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReminders", reflect.TypeOf((*MockReminderRepository)(nil).GetReminders), ctx, userId, status)
+}
+
+// UpdateLastTriggeredAt mocks base method.
+func (m *MockReminderRepository) UpdateLastTriggeredAt(ctx context.Context, reminderId string, lastTriggeredAt time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLastTriggeredAt", ctx, reminderId, lastTriggeredAt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateLastTriggeredAt indicates an expected call of UpdateLastTriggeredAt.
+func (mr *MockReminderRepositoryMockRecorder) UpdateLastTriggeredAt(ctx, reminderId, lastTriggeredAt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastTriggeredAt", reflect.TypeOf((*MockReminderRepository)(nil).UpdateLastTriggeredAt), ctx, reminderId, lastTriggeredAt)
 }
 
 // UpdateReminder mocks base method.

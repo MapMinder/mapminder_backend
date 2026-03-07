@@ -582,3 +582,90 @@ func TestReminderHandler_UpdateReminder(t *testing.T) {
 		})
 	}
 }
+
+func TestReminderHandler_UpdateLastTriggeredAt(t *testing.T) {
+	logger.InitForTest()
+	validator.Init()
+
+	testUserId := "test-user-id"
+	testReminderId := "550e8400-e29b-41d4-a716-446655440000"
+
+	tests := []struct {
+		name           string
+		reminderId     string
+		mockSetup      func(*mock.MockReminderUsecase)
+		expectedStatus int
+	}{
+		{
+			name:       "success",
+			reminderId: testReminderId,
+			mockSetup: func(mru *mock.MockReminderUsecase) {
+				mru.EXPECT().UpdateLastTriggeredAt(gomock.Any(), testReminderId).Return(true, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "failure when reminder id is invalid",
+			reminderId:     "invalid-uuid",
+			mockSetup:      func(mru *mock.MockReminderUsecase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "failure when usecase return internal error",
+			reminderId: testReminderId,
+			mockSetup: func(mru *mock.MockReminderUsecase) {
+				mru.EXPECT().UpdateLastTriggeredAt(gomock.Any(), testReminderId).Return(false, apperror.Internal())
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:       "failure when user is unauthorized",
+			reminderId: testReminderId,
+			mockSetup: func(mru *mock.MockReminderUsecase) {
+				mru.EXPECT().UpdateLastTriggeredAt(gomock.Any(), testReminderId).Return(false, apperror.Unauthorized())
+			},
+			expectedStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockUsecase := mock.NewMockReminderUsecase(ctrl)
+			tt.mockSetup(mockUsecase)
+
+			router := gin.New()
+			router.Use(middleware.ErrorHandler())
+
+			api := router.Group("/reminder")
+			handler := NewReminderHandler(mockUsecase)
+			api.Use(func(c *gin.Context) {
+				ctx := context.WithValue(c.Request.Context(), middleware.UserIDKey, testUserId)
+				c.Request = c.Request.WithContext(ctx)
+				c.Next()
+			})
+
+			req := httptest.NewRequest(
+				http.MethodPatch,
+				"/reminder/"+tt.reminderId+"/event",
+				nil,
+			)
+
+			handler.RegisterRoutes(api)
+			req.Header.Set("Content-Type", "application/json")
+
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			if w.Code != tt.expectedStatus {
+				t.Fatalf("expected status %d, got %d, body %s",
+					tt.expectedStatus,
+					w.Code,
+					w.Body.String(),
+				)
+			}
+		})
+	}
+}
