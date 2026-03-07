@@ -12,6 +12,13 @@ type Reminder struct {
 	// Radius      float64 `json:"radius" validate:"required"` the use's will not be able to set the radius it is a default value (atleast for the mvp)
 }
 
+type UpdateReminder struct {
+	Title       string  `json:"title" validate:"omitempty"`
+	Description string  `json:"description" validate:"omitempty"`
+	Latitude    float64 `json:"latitude" validate:"latitude,omitempty"`
+	Longitude   float64 `json:"longitude" validate:"longitude,omitempty"`
+}
+
 type ReminderRes struct {
 	Status status.Status
 	Result ReminderResStruct `json:"result"`

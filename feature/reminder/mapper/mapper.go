@@ -26,12 +26,22 @@ func MapReminders(targetReminders []domain.Reminder) []dto.ReminderResStruct {
 // MapReminder maps domain.Reminder to dto.ReminderResStruct
 func MapReminder(targetReminder domain.Reminder) (reminder dto.ReminderResStruct) {
 	return dto.ReminderResStruct{
-		ReminderId:  reminder.ReminderId,
-		Title:       reminder.Title,
-		Description: reminder.Description,
-		Latitude:    reminder.Latitude,
-		Longitude:   reminder.Longitude,
-		Radius:      reminder.Radius,
-		Status:      reminder.Status,
+		ReminderId:  targetReminder.ReminderId,
+		Title:       targetReminder.Title,
+		Description: targetReminder.Description,
+		Latitude:    targetReminder.Latitude,
+		Longitude:   targetReminder.Longitude,
+		Radius:      targetReminder.Radius,
+		Status:      targetReminder.Status,
+	}
+}
+
+func MapReminderFromDTOForUpdate(reminderId string, targetReminder dto.UpdateReminder) (reminder domain.Reminder) {
+	return domain.Reminder{
+		ReminderId:  reminderId,
+		Title:       targetReminder.Title,
+		Description: targetReminder.Description,
+		Latitude:    targetReminder.Latitude,
+		Longitude:   targetReminder.Longitude,
 	}
 }

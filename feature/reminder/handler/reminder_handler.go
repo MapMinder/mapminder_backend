@@ -29,6 +29,7 @@ func (h *ReminderHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/:reminder_id", h.GetReminder)
 	r.GET("", h.GetReminders)
 	r.DELETE("/:reminder_id", h.DeleteReminder)
+	r.PATCH("/:reminder_id", h.UpdateReminder)
 }
 
 func (h *ReminderHandler) CreateReminder(r *gin.Context) {
@@ -57,15 +58,7 @@ func (h *ReminderHandler) CreateReminder(r *gin.Context) {
 
 	res := dto.ReminderRes{
 		Status: status.Created,
-		Result: dto.ReminderResStruct{
-			ReminderId:  reminder.ReminderId,
-			Title:       reminder.Title,
-			Description: reminder.Description,
-			Latitude:    reminder.Latitude,
-			Longitude:   reminder.Longitude,
-			Radius:      reminder.Radius,
-			Status:      reminder.Status,
-		},
+		Result: mapper.MapReminder(reminder),
 	}
 
 	r.JSON(http.StatusCreated, res)
@@ -120,7 +113,7 @@ func (h *ReminderHandler) GetReminders(r *gin.Context) {
 }
 
 func (h *ReminderHandler) DeleteReminder(r *gin.Context) {
-	logger.Infof("reminde handler: DeleteReminder")
+	logger.Infof("reminder handler: DeleteReminder")
 	ctx := r.Request.Context()
 
 	reminderId := r.Param("reminder_id")
@@ -139,4 +132,44 @@ func (h *ReminderHandler) DeleteReminder(r *gin.Context) {
 	}
 
 	r.JSON(http.StatusOK, status.Success)
+}
+
+func (h *ReminderHandler) UpdateReminder(r *gin.Context) {
+	logger.Infof("reminder handler: UpdateReminder")
+	ctx := r.Request.Context()
+
+	reminderId := r.Param("reminder_id")
+	_, err := uuid.Parse(reminderId)
+	if err != nil {
+		logger.Errorw("Invalid ReminderId: ", err)
+		err = apperror.BadRequest()
+		r.Error(err)
+		return
+	}
+
+	var req dto.UpdateReminder
+	if err := r.ShouldBind(&req); err != nil {
+		logger.Errorw("Failed To Bind Request", err)
+		r.Error(apperror.BadRequest())
+		return
+	}
+
+	if err := validator.ValidateStruct(req); err != nil {
+		logger.Errorw("Failed To Validate Request", err)
+		r.Error(apperror.BadRequest())
+		return
+	}
+
+	reminder, err := h.ReminderUsecase.UpdateReminder(ctx, reminderId, req)
+	if err != nil {
+		r.Error(err)
+		return
+	}
+
+	res := dto.ReminderRes{
+		Status: status.Success,
+		Result: mapper.MapReminder(reminder),
+	}
+
+	r.JSON(http.StatusOK, res)
 }
