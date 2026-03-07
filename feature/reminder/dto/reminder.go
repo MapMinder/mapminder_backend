@@ -5,7 +5,7 @@ import (
 )
 
 type Reminder struct {
-	Title       string  `json:"title" validate:"required,min=1"`
+	Title       string  `json:"title" validate:"required,min=1,max=65"`
 	Description string  `json:"description" validate:"required,min=1"`
 	Latitude    float64 `json:"latitude" validate:"required,latitude"`
 	Longitude   float64 `json:"longitude" validate:"required,longitude"`
@@ -13,7 +13,7 @@ type Reminder struct {
 }
 
 type UpdateReminder struct {
-	Title       string  `json:"title" validate:"omitempty"`
+	Title       string  `json:"title" validate:"max=65,omitempty"`
 	Description string  `json:"description" validate:"omitempty"`
 	Latitude    float64 `json:"latitude" validate:"latitude"`
 	Longitude   float64 `json:"longitude" validate:"longitude"`
