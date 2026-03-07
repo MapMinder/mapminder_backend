@@ -43,5 +43,6 @@ func MapReminderFromDTOForUpdate(reminderId string, targetReminder dto.UpdateRem
 		Description: targetReminder.Description,
 		Latitude:    targetReminder.Latitude,
 		Longitude:   targetReminder.Longitude,
+		Status:      targetReminder.Status,
 	}
 }

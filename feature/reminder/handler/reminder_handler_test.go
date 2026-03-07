@@ -539,6 +539,13 @@ func TestReminderHandler_UpdateReminder(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 		},
+		{
+			name:           "failure when invalid status is provided",
+			reminderId:     testReminderId,
+			requestBody:    `{"title":"test title","description":"test description","latitude":20.00,"longitude":20.00,"status":"invalid-status"}`,
+			mockSetup:      func(mru *mock.MockReminderUsecase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
