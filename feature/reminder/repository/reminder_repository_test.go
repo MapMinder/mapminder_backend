@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
@@ -497,6 +498,64 @@ func TestReminderRepository_UpdateReminder(t *testing.T) {
 
 			repo := NewReminderRepository(db)
 			err := repo.UpdateReminder(context.Background(), tt.args)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestReminderRepository_UpdateLastTriggeredAt(t *testing.T) {
+	logger.InitForTest()
+	testReminderId := "test-reminder-uuid"
+	now := time.Now()
+
+	tests := []struct {
+		name            string
+		reminderId      string
+		LastTriggeredAt time.Time
+		wantErr         bool
+		setupMock       func(mock sqlmock.Sqlmock)
+	}{
+		{
+			name:            "create reminders success",
+			reminderId:      testReminderId,
+			LastTriggeredAt: now,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE `reminder` SET `last_triggered_at`=? WHERE reminder_id = ?")).
+					WithArgs(now, testReminderId).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+				mock.ExpectCommit()
+			},
+			wantErr: false,
+		},
+		{
+			name:            "internal error",
+			reminderId:      testReminderId,
+			LastTriggeredAt: now,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE `reminder` SET `last_triggered_at`=? WHERE reminder_id = ?")).
+					WillReturnError(apperror.Internal())
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, cleanup := setupMockDB(t)
+			defer cleanup()
+
+			tt.setupMock(mock)
+
+			repo := NewReminderRepository(db)
+			err := repo.UpdateLastTriggeredAt(context.Background(), tt.reminderId, tt.LastTriggeredAt)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

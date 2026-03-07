@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	tx "github.com/MapMinder/mapminder_backend/internal/infrastructure/database"
@@ -17,6 +18,7 @@ type ReminderRepository interface {
 	GetReminders(ctx context.Context, userId string, status string) (reminders []domain.Reminder, err error)
 	DeleteReminder(ctx context.Context, reminderId string) (err error)
 	UpdateReminder(ctx context.Context, reminder domain.Reminder) (err error)
+	UpdateLastTriggeredAt(ctx context.Context, reminderId string, lastTriggeredAt time.Time) (err error)
 }
 
 type reminderRepository struct {
@@ -120,8 +122,6 @@ func (r *reminderRepository) DeleteReminder(ctx context.Context, reminderId stri
 
 func (r *reminderRepository) UpdateReminder(ctx context.Context, reminder domain.Reminder) (err error) {
 	logger.Infof("reminder repository: UpdateReminder")
-
-	logger.Infof("reminder repository: UpdateReminder: %+v", reminder) // ← add this
 	db := tx.ExtractTx(ctx, r.db)
 	if db == nil {
 		db = r.db
@@ -132,5 +132,22 @@ func (r *reminderRepository) UpdateReminder(ctx context.Context, reminder domain
 		err = apperror.Internal()
 		return
 	}
+	return
+}
+
+func (r *reminderRepository) UpdateLastTriggeredAt(ctx context.Context, reminderId string, lastTriggeredAt time.Time) (err error) {
+	logger.Infof("reminder repository: UpdateLastTriggeredAt")
+	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
+
+	err = db.Model(domain.Reminder{}).Where("reminder_id = ?", reminderId).Update("last_triggered_at", lastTriggeredAt).Error
+	if err != nil {
+		logger.Errorw("Internal error occurred: ", err)
+		err = apperror.Internal()
+		return
+	}
+
 	return
 }
