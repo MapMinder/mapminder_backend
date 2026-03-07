@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: PRODUCTION
+      LOG_LEVEL: INFO
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: mapminder
+      DB_USER: mapminder
+      DB_PASSWORD: mapminderpass123
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: mapminderpass123
+      MYSQL_DATABASE: mapminder
+      MYSQL_USER: mapminder
+      MYSQL_PASSWORD: mapminderpass123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmapminderpass123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

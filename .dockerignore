@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+mapminder-backend
+
+# Test files
+*_test.go
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Documentation
+*.md
+!README.md
+
+# Development
+.air.toml
+Makefile
+log.txt
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Environment
+.env.local
+.env.*.local
+
+# Misc
+*.log
