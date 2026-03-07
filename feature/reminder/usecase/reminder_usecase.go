@@ -176,7 +176,7 @@ func (u reminderUsecase) UpdateLastTriggeredAt(ctx context.Context, reminderId s
 		now := u.TimeProvider.Now()
 		shouldNotify = u.shouldNotify(reminder, now)
 		if !shouldNotify {
-			logger.Infof("Cooldown in process no notification will be sent")
+			logger.Infof("Cooldown in process or reminder's status is paused no notification will be sent")
 			return nil
 		}
 
