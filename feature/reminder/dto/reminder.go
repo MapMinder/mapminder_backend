@@ -15,8 +15,9 @@ type Reminder struct {
 type UpdateReminder struct {
 	Title       string  `json:"title" validate:"omitempty"`
 	Description string  `json:"description" validate:"omitempty"`
-	Latitude    float64 `json:"latitude" validate:"latitude,omitempty"`
-	Longitude   float64 `json:"longitude" validate:"longitude,omitempty"`
+	Latitude    float64 `json:"latitude" validate:"latitude"`
+	Longitude   float64 `json:"longitude" validate:"longitude"`
+	Status      string  `json:"status" validate:"status"`
 }
 
 type ReminderRes struct {

@@ -10,6 +10,7 @@ func Init() {
 	validate = validator.New()
 	validate.RegisterValidation("latitude", ValidateLatitude)
 	validate.RegisterValidation("longitude", ValidateLongitude)
+	validate.RegisterValidation("status", ValidateStatus)
 }
 
 func ValidateStruct(s any) error {
