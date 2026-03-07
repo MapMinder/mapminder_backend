@@ -16,6 +16,7 @@ type ReminderRepository interface {
 	GetReminder(ctx context.Context, reminderId string) (reiminder domain.Reminder, err error)
 	GetReminders(ctx context.Context, userId string, status string) (reminders []domain.Reminder, err error)
 	DeleteReminder(ctx context.Context, reminderId string) (err error)
+	UpdateReminder(ctx context.Context, reminder domain.Reminder) (err error)
 }
 
 type reminderRepository struct {
@@ -55,7 +56,7 @@ func (r *reminderRepository) GetReminder(ctx context.Context, reminderId string)
 	if err = db.Where("reminder_id = ?", reminderId).Take(&reminder).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.Infof("No records found for given reminderId")
-			err = nil
+			err = apperror.NotFound()
 			return
 		} else {
 			logger.Errorw("Internal error occurred: ", err)
@@ -82,7 +83,7 @@ func (r *reminderRepository) GetReminders(ctx context.Context, userId string, st
 	if err = query.Find(&reminders).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.Infof("No records found for given reminderId")
-			err = nil
+			err = apperror.NotFound()
 			return
 		} else {
 			logger.Errorw("Internal error occurred: ", err)
@@ -112,6 +113,23 @@ func (r *reminderRepository) DeleteReminder(ctx context.Context, reminderId stri
 	if res.RowsAffected == 0 {
 		logger.Infow("No records found", "remidner id: ", reminderId)
 		err = apperror.NotFound()
+		return
+	}
+	return
+}
+
+func (r *reminderRepository) UpdateReminder(ctx context.Context, reminder domain.Reminder) (err error) {
+	logger.Infof("reminder repository: UpdateReminder")
+
+	logger.Infof("reminder repository: UpdateReminder: %+v", reminder) // ← add this
+	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
+
+	if err = db.Model(domain.Reminder{}).Where("reminder_id = ?", reminder.ReminderId).Updates(&reminder).Error; err != nil {
+		logger.Errorw("Internal error occurred: ", err)
+		err = apperror.Internal()
 		return
 	}
 	return

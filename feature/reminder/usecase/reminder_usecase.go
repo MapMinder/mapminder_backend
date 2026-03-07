@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/dto"
+	"github.com/MapMinder/mapminder_backend/feature/reminder/mapper"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/repository"
 	"github.com/MapMinder/mapminder_backend/internal/logger"
 	apperror "github.com/MapMinder/mapminder_backend/shared/appError"
@@ -19,6 +21,7 @@ type ReminderUsecase interface {
 	GetReminder(ctx context.Context, reminderId string) (reminder domain.Reminder, err error)
 	GetReminders(ctx context.Context, status string) (reminders []domain.Reminder, err error)
 	DeleteReminder(ctx context.Context, reminderId string) (err error)
+	UpdateReminder(ctx context.Context, reminderId string, reminder dto.UpdateReminder) (updatedReminder domain.Reminder, err error)
 }
 
 type reminderUsecase struct {
@@ -96,6 +99,12 @@ func (u *reminderUsecase) GetReminders(ctx context.Context, status string) (remi
 	}
 
 	reminders, err = u.ReminderRepository.GetReminders(ctx, userId, status)
+	if errors.Is(err, apperror.NotFound()) {
+		// if records are not found it could mean that the user has never created a reminder
+		// this is not an error so we return no errors
+		err = nil
+		return
+	}
 	if err != nil {
 		return
 	}
@@ -107,6 +116,39 @@ func (u *reminderUsecase) DeleteReminder(ctx context.Context, reminderId string)
 
 	err = u.TxManager.WithinTransaction(ctx, func(txCtx context.Context) error {
 		err = u.ReminderRepository.DeleteReminder(ctx, reminderId)
+		return nil
+	})
+	return
+}
+
+func (u reminderUsecase) UpdateReminder(ctx context.Context, reminderId string, reminder dto.UpdateReminder) (updatedReminder domain.Reminder, err error) {
+	logger.Infof("reminder usecase: UpdateReminder")
+
+	userId := middleware.UserIDFromContext(ctx)
+
+	err = u.TxManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+		oldReminder, err := u.ReminderRepository.GetReminder(txCtx, reminderId)
+		if err != nil {
+			// ReminderRepoisitory.GetReminder returns not found error and logs so no need to explictly handle here
+			return err
+		}
+
+		if oldReminder.UserId != userId {
+			logger.Errorw("Invalid access reminder does not belong to user: ", apperror.Unauthorized(), "reminder_id: ", reminderId, "user_id: ", userId)
+			err = apperror.Unauthorized()
+			return err
+		}
+
+		err = u.ReminderRepository.UpdateReminder(txCtx, mapper.MapReminderFromDTOForUpdate(reminderId, reminder))
+		if err != nil {
+			return err
+		}
+
+		updatedReminder, err = u.ReminderRepository.GetReminder(txCtx, reminderId)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	return

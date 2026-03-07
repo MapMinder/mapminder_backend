@@ -151,12 +151,11 @@ func TestReminderRepository_GetReminder(t *testing.T) {
 		{
 			name:       "get reminder not found",
 			reminderId: testReminderId,
-			wantErr:    false,
+			wantErr:    true,
 			setupMock: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"})
 				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE reminder_id = ? LIMIT ?")).
 					WithArgs(testReminderId, 1).
-					WillReturnRows(rows)
+					WillReturnError(apperror.NotFound())
 			},
 		},
 		{
@@ -333,17 +332,16 @@ func TestReminderRepository_GetReminders(t *testing.T) {
 			name:         "when status active is provided but no records match",
 			userId:       testUserId,
 			status:       string(domain.ActiveStatus),
-			wantErr:      false,
+			wantErr:      true,
 			wantReminder: []domain.Reminder{},
 			setupMock: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"reminder_id", "user_id", "title", "description", "latitude", "longitude", "radius", "status", "last_triggered_at", "completed_at"})
 				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `reminder` WHERE user_id = ? AND status = ?")).
 					WithArgs(testUserId, domain.ActiveStatus).
-					WillReturnRows(rows)
+					WillReturnError(apperror.NotFound())
 			},
 		},
 		{
-			name:         "when status active is provided but no records match",
+			name:         "internal error",
 			userId:       testUserId,
 			status:       string(domain.ActiveStatus),
 			wantErr:      true,
@@ -433,6 +431,72 @@ func TestReminderRepository_DeleteReminder(t *testing.T) {
 
 			repo := NewReminderRepository(db)
 			err := repo.DeleteReminder(context.Background(), tt.reminderId)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestReminderRepository_UpdateReminder(t *testing.T) {
+	logger.InitForTest()
+	testReminderId := "test-reminder-uuid"
+	testTitle := "test title"
+	testDescription := "test description"
+	testLatitude := 20.00
+	testLongitude := 20.00
+
+	args := domain.Reminder{
+		ReminderId:  testReminderId,
+		Title:       testTitle,
+		Description: testDescription,
+		Latitude:    testLatitude,
+		Longitude:   testLongitude,
+	}
+
+	tests := []struct {
+		name      string
+		args      domain.Reminder
+		wantErr   bool
+		setupMock func(mock sqlmock.Sqlmock)
+	}{
+		{
+			name: "create reminders success",
+			args: args,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE `reminder` SET `reminder_id`=?,`title`=?,`description`=?,`latitude`=?,`longitude`=? WHERE reminder_id = ?")).
+					WithArgs(testReminderId, testTitle, testDescription, testLatitude, testLongitude, testReminderId).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+				mock.ExpectCommit()
+			},
+			wantErr: false,
+		},
+		{
+			name: "internal error",
+			args: args,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE `reminder` SET `reminder_id`=?,`title`=?,`description`=?,`latitude`=?,`longitude`=? WHERE reminder_id = ?")).
+					WillReturnError(apperror.Internal())
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, cleanup := setupMockDB(t)
+			defer cleanup()
+
+			tt.setupMock(mock)
+
+			repo := NewReminderRepository(db)
+			err := repo.UpdateReminder(context.Background(), tt.args)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
