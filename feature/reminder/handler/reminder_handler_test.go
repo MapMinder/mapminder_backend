@@ -36,10 +36,27 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 		Longitude:   testLongitude,
 	}
 
+	testReminderWhenTitleAtLimit := dto.Reminder{
+		Title:       "Lorem Ipsum is simply dummy text of the printing and typesetting",
+		Description: testDescription,
+		Latitude:    testLatitude,
+		Longitude:   testLongitude,
+	}
+
 	testReminderRes := domain.Reminder{
 		ReminderId:  testReminderId,
 		UserId:      testUserId,
 		Title:       testTitle,
+		Description: testDescription,
+		Latitude:    testLatitude,
+		Longitude:   testLongitude,
+		Radius:      domain.DefaultRadius,
+		Status:      string(domain.ActiveStatus),
+	}
+	testReminderWithLongTitleRes := domain.Reminder{
+		ReminderId:  testReminderId,
+		UserId:      testUserId,
+		Title:       "Lorem Ipsum is simply dummy text of the printing and typesetting",
 		Description: testDescription,
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
@@ -59,6 +76,20 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 				mru.EXPECT().CreateReminder(gomock.Any(), testReminder).Return(testReminderRes, nil)
 			},
 			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:        "success when title length at limit",
+			requestBody: `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting","description":"test description","latitude":20.00,"longitude":20.00}`,
+			mockSetup: func(mru *mock.MockReminderUsecase) {
+				mru.EXPECT().CreateReminder(gomock.Any(), testReminderWhenTitleAtLimit).Return(testReminderWithLongTitleRes, nil)
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "failure when title too long",
+			requestBody:    `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting industry.","description":"test description","latitude":20.00,"longitude":20.00}`,
+			mockSetup:      func(mru *mock.MockReminderUsecase) {},
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when latitude is invalid",
@@ -421,11 +452,27 @@ func TestReminderHandler_UpdateReminder(t *testing.T) {
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
 	}
+	testReminderWhenTitleAtLimit := dto.UpdateReminder{
+		Title:       "Lorem Ipsum is simply dummy text of the printing and typesetting",
+		Description: testDescription,
+		Latitude:    testLatitude,
+		Longitude:   testLongitude,
+	}
 
 	testReminderRes := domain.Reminder{
 		ReminderId:  testReminderId,
 		UserId:      testUserId,
 		Title:       testTitle,
+		Description: testDescription,
+		Latitude:    testLatitude,
+		Longitude:   testLongitude,
+		Radius:      domain.DefaultRadius,
+		Status:      string(domain.ActiveStatus),
+	}
+	testReminderWhenTitleAtLimitRes := domain.Reminder{
+		ReminderId:  testReminderId,
+		UserId:      testUserId,
+		Title:       "Lorem Ipsum is simply dummy text of the printing and typesetting",
 		Description: testDescription,
 		Latitude:    testLatitude,
 		Longitude:   testLongitude,
@@ -445,6 +492,15 @@ func TestReminderHandler_UpdateReminder(t *testing.T) {
 			requestBody: `{"title":"test title","description":"test description","latitude":20.00,"longitude":20.00}`,
 			mockSetup: func(mru *mock.MockReminderUsecase) {
 				mru.EXPECT().UpdateReminder(gomock.Any(), testReminderId, testReminder).Return(testReminderRes, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:        "success when title length at limit",
+			reminderId:  testReminderId,
+			requestBody: `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting","description":"test description","latitude":20.00,"longitude":20.00}`,
+			mockSetup: func(mru *mock.MockReminderUsecase) {
+				mru.EXPECT().UpdateReminder(gomock.Any(), testReminderId, testReminderWhenTitleAtLimit).Return(testReminderWhenTitleAtLimitRes, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -499,6 +555,13 @@ func TestReminderHandler_UpdateReminder(t *testing.T) {
 				}).Return(testReminderRes, nil)
 			},
 			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "failure when title too long",
+			reminderId:     testReminderId,
+			requestBody:    `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting industry.","description":"test description","latitude":20.00,"longitude":20.00}`,
+			mockSetup:      func(mru *mock.MockReminderUsecase) {},
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when reminder id is invalid",
