@@ -76,7 +76,6 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 		}
 		return nil
 	})
-
 	return
 }
 

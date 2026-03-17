@@ -118,7 +118,7 @@ func TestUserRepository_GetUser(t *testing.T) {
 			repo := repository.NewUserRepository(db)
 
 			var err error
-			_, err = repo.GetUser(tt.userId)
+			_, err = repo.GetUser(context.Background(), tt.userId)
 
 			if tt.wantErr {
 				assert.Error(t, err)
