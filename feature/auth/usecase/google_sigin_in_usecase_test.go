@@ -82,7 +82,7 @@ func TestGoogleSignIn(t *testing.T) {
 			) {
 				mgr.EXPECT().GetGoogleUserInfo(gomock.Any(), testCreds).Return(testClaims, nil)
 				motr.EXPECT().GetOauthInformation(gomock.Any(), testClaims.Claims.Subject).Return(testOauthToken, nil)
-				mur.EXPECT().GetUser(testUserUUID).Return(testUser, nil)
+				mur.EXPECT().GetUser(gomock.Any(), testUserUUID).Return(testUser, nil)
 			},
 			wantedError: nil,
 		},

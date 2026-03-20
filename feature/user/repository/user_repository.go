@@ -12,7 +12,7 @@ import (
 
 type UserRepository interface {
 	Create(ctx context.Context, user domain.User) (err error)
-	GetUser(userId string) (user domain.User, err error)
+	GetUser(ctx context.Context, userId string) (user domain.User, err error)
 }
 
 type userRepository struct {
@@ -40,8 +40,13 @@ func (r *userRepository) Create(ctx context.Context, user domain.User) (err erro
 	return
 }
 
-func (r *userRepository) GetUser(userId string) (user domain.User, err error) {
-	if err = r.db.Where("user_id = ?", userId).Take(&user).Error; err != nil {
+func (r *userRepository) GetUser(ctx context.Context, userId string) (user domain.User, err error) {
+	db := tx.ExtractTx(ctx, r.db)
+	if db == nil {
+		db = r.db
+	}
+
+	if err = db.Where("user_id = ?", userId).Take(&user).Error; err != nil {
 		logger.Errorw("Error finding user: ", err)
 		err = apperror.Internal()
 		return
