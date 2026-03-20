@@ -66,7 +66,7 @@ func (h *ReminderHandler) CreateReminder(r *gin.Context) {
 }
 
 func (h *ReminderHandler) GetReminder(r *gin.Context) {
-	logger.Infof("reminde handler: GetReminder")
+	logger.Infof("reminder handler: GetReminder")
 	ctx := r.Request.Context()
 
 	reminderId := r.Param("reminder_id")

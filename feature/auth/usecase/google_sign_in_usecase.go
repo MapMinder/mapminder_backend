@@ -76,7 +76,7 @@ func (u *googleSignInUsecase) GoogleSignIn(ctx context.Context, idToken string) 
 				return err
 			}
 		} else {
-			user, err = u.UserRepository.GetUser(oauthToken.UserId)
+			user, err = u.UserRepository.GetUser(txCtx, oauthToken.UserId)
 			if err != nil {
 				return err
 			}
