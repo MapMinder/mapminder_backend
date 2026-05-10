@@ -45,18 +45,20 @@ func TestReminderRepository_Create(t *testing.T) {
 	testReminderId := "test-reminder-uuid"
 	testTitle := "test title"
 	testDescription := "test description"
+	testLocationName := "test location name"
 	testLatitude := 20.00
 	testLongitude := 20.00
 
 	args := domain.Reminder{
-		ReminderId:  testReminderId,
-		UserId:      testUserId,
-		Title:       testTitle,
-		Description: testDescription,
-		Latitude:    testLatitude,
-		Longitude:   testLongitude,
-		Radius:      domain.DefaultRadius,
-		Status:      string(domain.ActiveStatus),
+		ReminderId:   testReminderId,
+		UserId:       testUserId,
+		Title:        testTitle,
+		Description:  testDescription,
+		Latitude:     testLatitude,
+		Longitude:    testLongitude,
+		LocationName: testLocationName,
+		Radius:       domain.DefaultRadius,
+		Status:       string(domain.ActiveStatus),
 	}
 
 	tests := []struct {
@@ -70,8 +72,8 @@ func TestReminderRepository_Create(t *testing.T) {
 			args: args,
 			setupMock: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
-				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `reminder` (`reminder_id`,`user_id`,`title`,`description`,`latitude`,`longitude`,`radius`,`status`,`last_triggered_at`,`completed_at`) VALUES (?,?,?,?,?,?,?,?,?,?)")).
-					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil).
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `reminder` (`reminder_id`,`user_id`,`title`,`description`,`latitude`,`longitude`,`location_name`,`radius`,`status`,`last_triggered_at`,`completed_at`,`created_at`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")).
+					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, testLocationName, domain.DefaultRadius, domain.ActiveStatus, nil, nil, sqlmock.AnyArg()).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 				mock.ExpectCommit()
 			},
@@ -82,8 +84,8 @@ func TestReminderRepository_Create(t *testing.T) {
 			args: args,
 			setupMock: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
-				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `reminder` (`reminder_id`,`user_id`,`title`,`description`,`latitude`,`longitude`,`radius`,`status`,`last_triggered_at`,`completed_at`) VALUES (?,?,?,?,?,?,?,?,?,?)")).
-					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, domain.DefaultRadius, domain.ActiveStatus, nil, nil).
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `reminder` (`reminder_id`,`user_id`,`title`,`description`,`latitude`,`longitude`,`location_name`,`radius`,`status`,`last_triggered_at`,`completed_at`,`created_at`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")).
+					WithArgs(testReminderId, testUserId, testTitle, testDescription, testLatitude, testLongitude, testLocationName, domain.DefaultRadius, domain.ActiveStatus, nil, nil, sqlmock.AnyArg()).
 					WillReturnError(apperror.Internal())
 				mock.ExpectRollback()
 			},
