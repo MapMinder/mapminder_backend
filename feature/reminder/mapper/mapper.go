@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/MapMinder/mapminder_backend/feature/reminder/domain"
 	"github.com/MapMinder/mapminder_backend/feature/reminder/dto"
 )
@@ -19,6 +21,7 @@ func MapReminders(targetReminders []domain.Reminder) []dto.ReminderResStruct {
 			LocationName: reminder.LocationName,
 			Radius:       reminder.Radius,
 			Status:       reminder.Status,
+			CompletedAt:  reminder.CompletedAt,
 			CreatedAt:    reminder.CreatedAt,
 		})
 	}
@@ -36,11 +39,18 @@ func MapReminder(targetReminder domain.Reminder) (reminder dto.ReminderResStruct
 		LocationName: targetReminder.LocationName,
 		Radius:       targetReminder.Radius,
 		Status:       targetReminder.Status,
+		CompletedAt:  targetReminder.CompletedAt,
 		CreatedAt:    targetReminder.CreatedAt,
 	}
 }
 
 func MapReminderFromDTOForUpdate(reminderId string, targetReminder dto.UpdateReminder) (reminder domain.Reminder) {
+	var completedAt *time.Time
+	if targetReminder.Status == string(domain.CompletedStatus) {
+		now := time.Now()
+		completedAt = &now
+	}
+
 	return domain.Reminder{
 		ReminderId:  reminderId,
 		Title:       targetReminder.Title,
@@ -48,5 +58,6 @@ func MapReminderFromDTOForUpdate(reminderId string, targetReminder dto.UpdateRem
 		Latitude:    targetReminder.Latitude,
 		Longitude:   targetReminder.Longitude,
 		Status:      targetReminder.Status,
+		CompletedAt: completedAt,
 	}
 }

@@ -44,13 +44,14 @@ type Notify struct {
 }
 
 type ReminderResStruct struct {
-	ReminderId   string    `json:"reminder_id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	Latitude     float64   `json:"latitude"`
-	Longitude    float64   `json:"longitude"`
-	LocationName string    `json:"location_name"`
-	Radius       float64   `json:"radius"`
-	Status       string    `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
+	ReminderId   string     `json:"reminder_id"`
+	Title        string     `json:"title"`
+	Description  string     `json:"description"`
+	Latitude     float64    `json:"latitude"`
+	Longitude    float64    `json:"longitude"`
+	LocationName string     `json:"location_name"`
+	Radius       float64    `json:"radius"`
+	Status       string     `json:"status"`
+	CompletedAt  *time.Time `json:"completed_at"`
+	CreatedAt    time.Time  `json:"created_at"`
 }
