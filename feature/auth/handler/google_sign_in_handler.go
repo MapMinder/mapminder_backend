@@ -59,7 +59,5 @@ func (h *GoogleSignInHandler) GoogleSignIn(r *gin.Context) {
 		Result: jwtToken,
 	}
 
-	logger.Info(jwtToken)
-
 	r.JSON(http.StatusOK, res)
 }
