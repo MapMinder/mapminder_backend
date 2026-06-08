@@ -28,40 +28,45 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 	testDescription := "test description"
 	testLatitude := 20.00
 	testLongitude := 20.00
+	testLocationName := "test location name"
 
 	testReminder := dto.Reminder{
-		Title:       testTitle,
-		Description: testDescription,
-		Latitude:    testLatitude,
-		Longitude:   testLongitude,
+		Title:        testTitle,
+		Description:  testDescription,
+		Latitude:     testLatitude,
+		Longitude:    testLongitude,
+		LocationName: testLocationName,
 	}
 
 	testReminderWhenTitleAtLimit := dto.Reminder{
-		Title:       "Lorem Ipsum is simply dummy text of the printing and typesetting",
-		Description: testDescription,
-		Latitude:    testLatitude,
-		Longitude:   testLongitude,
+		Title:        "Lorem Ipsum is simply dummy text of the printing and typesetting",
+		Description:  testDescription,
+		Latitude:     testLatitude,
+		Longitude:    testLongitude,
+		LocationName: testLocationName,
 	}
 
 	testReminderRes := domain.Reminder{
-		ReminderId:  testReminderId,
-		UserId:      testUserId,
-		Title:       testTitle,
-		Description: testDescription,
-		Latitude:    testLatitude,
-		Longitude:   testLongitude,
-		Radius:      domain.DefaultRadius,
-		Status:      string(domain.ActiveStatus),
+		ReminderId:   testReminderId,
+		UserId:       testUserId,
+		Title:        testTitle,
+		Description:  testDescription,
+		Latitude:     testLatitude,
+		Longitude:    testLongitude,
+		LocationName: testLocationName,
+		Radius:       domain.DefaultRadius,
+		Status:       string(domain.ActiveStatus),
 	}
 	testReminderWithLongTitleRes := domain.Reminder{
-		ReminderId:  testReminderId,
-		UserId:      testUserId,
-		Title:       "Lorem Ipsum is simply dummy text of the printing and typesetting",
-		Description: testDescription,
-		Latitude:    testLatitude,
-		Longitude:   testLongitude,
-		Radius:      domain.DefaultRadius,
-		Status:      string(domain.ActiveStatus),
+		ReminderId:   testReminderId,
+		UserId:       testUserId,
+		Title:        "Lorem Ipsum is simply dummy text of the printing and typesetting",
+		Description:  testDescription,
+		Latitude:     testLatitude,
+		Longitude:    testLongitude,
+		LocationName: testLocationName,
+		Radius:       domain.DefaultRadius,
+		Status:       string(domain.ActiveStatus),
 	}
 	tests := []struct {
 		name           string
@@ -71,7 +76,7 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 	}{
 		{
 			name:        "success",
-			requestBody: `{"title":"test title","description":"test description","latitude":20.00,"longitude":20.00}`,
+			requestBody: `{"title":"test title","description":"test description","latitude":20.00,"longitude":20.00,"location_name":"test location name"}`,
 			mockSetup: func(mru *mock.MockReminderUsecase) {
 				mru.EXPECT().CreateReminder(gomock.Any(), testReminder).Return(testReminderRes, nil)
 			},
@@ -79,7 +84,7 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 		},
 		{
 			name:        "success when title length at limit",
-			requestBody: `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting","description":"test description","latitude":20.00,"longitude":20.00}`,
+			requestBody: `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting","description":"test description","latitude":20.00,"longitude":20.00,"location_name":"test location name"}`,
 			mockSetup: func(mru *mock.MockReminderUsecase) {
 				mru.EXPECT().CreateReminder(gomock.Any(), testReminderWhenTitleAtLimit).Return(testReminderWithLongTitleRes, nil)
 			},
@@ -87,44 +92,44 @@ func TestReminderHandler_CreateReminder(t *testing.T) {
 		},
 		{
 			name:           "failure when title too long",
-			requestBody:    `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting industry.","description":"test description","latitude":20.00,"longitude":20.00}`,
+			requestBody:    `{"title":"Lorem Ipsum is simply dummy text of the printing and typesetting industry.","description":"test description","latitude":20.00,"longitude":20.00,"location_name":"test location name"}`,
 			mockSetup:      func(mru *mock.MockReminderUsecase) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when latitude is invalid",
-			requestBody:    `{"title":"test title","description":"test description","latitude":-200.00,"longitude":20.00}`,
+			requestBody:    `{"title":"test title","description":"test description","latitude":-200.00,"longitude":20.00,"location_name":"test location name"}`,
 			mockSetup:      func(mru *mock.MockReminderUsecase) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when longitude is invalid",
-			requestBody:    `{"title":"test title","description":"test description","latitude":20.00,"longitude":-200.00}`,
+			requestBody:    `{"title":"test title","description":"test description","latitude":20.00,"longitude":-200.00,"location_name":"test location name"}`,
 			mockSetup:      func(mru *mock.MockReminderUsecase) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "failure when title is not provided",
-			requestBody: `{"description":"test description","latitude":20.00,"longitude":-200.00}`,
+			requestBody: `{"description":"test description","latitude":20.00,"longitude":-200.00,"location_name":"test location name"}`,
 			mockSetup: func(mru *mock.MockReminderUsecase) {
 			},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when description is not provided",
-			requestBody:    `{"title":"test title","latitude":20.00,"longitude":-200.00}`,
+			requestBody:    `{"title":"test title","latitude":20.00,"longitude":-200.00,"location_name":"test location name"}`,
 			mockSetup:      func(mru *mock.MockReminderUsecase) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when latitude is not provided",
-			requestBody:    `{"title":"test title","description":"test description","longitude":-200.00}`,
+			requestBody:    `{"title":"test title","description":"test description","longitude":-200.00,"location_name":"test location name"}`,
 			mockSetup:      func(mru *mock.MockReminderUsecase) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "failure when longitude is not provided",
-			requestBody:    `{"title":"test title","description":"test description","latitude":20.00}`,
+			requestBody:    `{"title":"test title","description":"test description","latitude":20.00,"location_name":"test location name"}`,
 			mockSetup:      func(mru *mock.MockReminderUsecase) {},
 			expectedStatus: http.StatusBadRequest,
 		},
