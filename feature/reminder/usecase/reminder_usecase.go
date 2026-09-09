@@ -59,14 +59,15 @@ func (u *reminderUsecase) CreateReminder(ctx context.Context, params dto.Reminde
 		}
 
 		reminder = domain.Reminder{
-			ReminderId:  reminderId,
-			UserId:      userId,
-			Title:       params.Title,
-			Description: params.Description,
-			Latitude:    params.Latitude,
-			Longitude:   params.Longitude,
-			Radius:      domain.DefaultRadius,
-			Status:      string(domain.ActiveStatus),
+			ReminderId:   reminderId,
+			UserId:       userId,
+			Title:        params.Title,
+			Description:  params.Description,
+			Latitude:     params.Latitude,
+			Longitude:    params.Longitude,
+			LocationName: params.LocationName,
+			Radius:       domain.DefaultRadius,
+			Status:       string(domain.ActiveStatus),
 		}
 
 		err = u.ReminderRepository.Create(txCtx, reminder)
